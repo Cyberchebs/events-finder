@@ -6,11 +6,9 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Pre-Phase 1 — Planning & Documentation (complete)
-**Last completed:** Full documentation set + complete UI screen set, all cross-consistent
-**Next:** `01 Homepage / Discover shell — Full UI` (first real code, per `build-plan.md`)
-
-No application code has been written yet. Every phase below is unchecked because the build hasn't started — this tracker exists from day one so the first commit has something to update rather than something to invent.
+**Phase:** Phase 1 — Feature 04 Database Schema (core tables and RLS applied; storage setup remains)
+**Last completed:** Applied and recorded the Phase 4 schema and security migrations in the linked Supabase project
+**Next:** Create the `ticket-card-images` storage bucket and its upload/read policies
 
 ---
 
@@ -30,10 +28,10 @@ No application code has been written yet. Every phase below is unchecked because
 - [ ] progress-tracker.md — this file, created, to be updated from here on
 
 ### Phase 1 — Foundation
-- [ ] 01 Homepage / Discover shell — Full UI (mock data)
-- [ ] 02 Auth
-- [ ] 03 PostHog Initialization
-- [ ] 04 Database Schema
+- [x] 01 Homepage / Discover shell — Full UI (mock data)
+- [ ] 02 Auth — in progress (SSR clients, callback, proxy protection, email/password and Google flow scaffolded; desktop navbar reflects session state and supports logout)
+- [ ] 03 PostHog Initialization — browser SDK, pageviews/autocapture, and current auth/Discover events implemented; server event client pending
+- [ ] 04 Database Schema — core tables, enums, and RLS deployed; storage bucket/policies pending
 
 ### Phase 2 — Discover & Event Detail
 - [ ] 05 Discover Page — Full UI (real categories, mock events)
@@ -97,5 +95,5 @@ These were locked in during planning, before any code was written, and should no
 - This project has gone through an unusually thorough planning phase relative to JobPilot's tracker at the same stage — nine documentation files plus a full visual screen set were produced and cross-checked against each other before any code was written. That front-loaded cost is intentional given how much of this product's trust depends on money- and inventory-handling code being correct the first time (see the dedicated "Architecture Review" section of `project-scope.md`).
 - The UI screen set (`tik-booth-ui.html`) is published as a live artifact and also exported as per-section PNGs (light + dark) and one full-page composite — these are reference material for implementation, not themselves part of the Next.js codebase.
 - `ui-tokens.md` currently documents the token values exactly as they exist in the published HTML artifact's inline `<style>` block. When `app/globals.css` is created in Feature 01, the `@theme` block must be copied from `ui-tokens.md` verbatim — not re-derived from scratch — to avoid the two drifting apart.
-- No `types/database.types.ts` exists yet since no Supabase project/schema has been created. This is expected to be one of the first real artifacts of Feature 04.
+- `types/database.types.ts` defines the current application-facing database types. Regenerate/compare it against the live schema as the schema evolves.
 - Nothing in `project-scope.md`'s "Open Questions" section remains unresolved as of this tracker's creation — all prior open items were explicitly closed out during planning (see `project-scope.md` for the resolution of each).

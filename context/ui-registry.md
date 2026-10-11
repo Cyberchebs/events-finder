@@ -18,6 +18,47 @@ After building any component — update this file with the component name, file 
 
 ## Components
 
+### DiscoverPage
+
+File: app/page.tsx
+Last updated: 2026-10-03
+
+| Property         | Class                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------|
+| Page shell       | `min-h-screen bg-background px-6 pb-12 pt-8`                                                          |
+| Header badge     | `h-6 w-6 rounded-[7px] bg-brand text-[10px] font-extrabold text-brand-ink`                            |
+| Page title       | `text-[20px] font-extrabold tracking-[-0.04em] text-ink`                                              |
+| Description      | `max-w-[990px] text-[12.5px] font-medium leading-6 text-ink-2`                                       |
+| Phone shell      | `max-w-[360px] rounded-[20px] border border-border bg-surface-2 p-2.5`                                |
+| Search row       | `flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-2.5`                  |
+| Chip state       | Active: `bg-brand text-brand-ink`; inactive: `border border-border bg-surface text-ink-2`             |
+| Status badge     | Live: `bg-live-soft text-live-ink` with pulsing `bg-live`, Free: `bg-ok-soft text-ok-ink`               |
+| Event card       | `overflow-hidden rounded-[16px] border border-border bg-surface`                                       |
+| Empty state      | `flex min-h-[330px] flex-col items-center justify-center` with neutral `bg-sunken` icon orb             |
+
+**Pattern notes:**
+The page intentionally mirrors the published Discover screen set: three mobile-card states on a single screen, with a populated list, a filtered results list, and an empty-state version. The layout stays fully token-based and avoids raw color values outside the project theme.
+
+### LoginPage
+
+File: app/login/LoginForm.tsx
+Last updated: 2026-10-09
+
+| Property         | Class                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------|
+| Shell            | `min-h-screen bg-background px-4 py-10`                                                                 |
+| Card             | `rounded-[24px] border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(20,18,32,0.06),0_8px_24px_rgba(20,18,32,0.06)]` |
+| Brand block      | `h-10 w-10 rounded-[12px] bg-brand text-lg font-extrabold text-brand-ink`                           |
+| Heading          | `text-[24px] font-extrabold tracking-[-0.04em] text-ink`                                             |
+| Secondary text   | `text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-3`                                 |
+| Divider          | `h-px flex-1 bg-border`                                                                                |
+| Input state      | `border border-border bg-surface-2 px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-line`     |
+| Primary action   | `bg-brand px-4 py-3 text-brand-ink`                                                                    |
+| Supporting note  | `bg-brand-soft px-3 py-2 text-ink-2`                                                                   |
+
+**Pattern notes:**
+The login screen follows the same token system as the rest of the product and keeps the single-account messaging explicit. It uses the same brand purple, neutral border, and soft support panel patterns used elsewhere instead of introducing new color logic.
+
 ### EventCard
 
 File: components/discover/EventCard.tsx
@@ -319,7 +360,7 @@ Four tabs fixed in this order always: Discover, My tickets, Create (center, lead
 ### Navbar (desktop)
 
 File: components/layout/Navbar.tsx
-Last updated: 2026-09-20
+Last updated: 2026-10-09
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
@@ -327,10 +368,11 @@ Last updated: 2026-09-20
 | Border           | `border-b border-border`                                                                                  |
 | Text — primary   | `text-[13px] font-semibold text-ink-2`, active link `text-ink`                                             |
 | Spacing          | `h-[54px] px-5 flex items-center justify-between gap-4.5`                                                  |
+| Auth control     | `h-[42px] w-[112px] rounded-md border border-line-2 bg-surface`; signed-in action uses `LogOut` icon       |
 | Accent usage     | `bg-brand text-brand-ink` on the single "Create event" CTA only                                            |
 
 **Pattern notes:**
-Logged-out state shows "Log in" (neutral button) beside the same "Create event" CTA — clicking Create while logged out routes through auth first, then resumes into the wizard, rather than the button being hidden or disabled pre-login.
+The control follows Supabase's live auth state: logged-out users see "Log in," while signed-in users get a "Log out" action that calls `supabase.auth.signOut()`. A brief status placeholder is shown while the browser session is restored, and the control keeps a fixed width across states. The "Create event" CTA remains unchanged.
 
 ---
 

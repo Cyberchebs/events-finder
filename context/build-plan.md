@@ -40,9 +40,9 @@ Supabase Auth — email/password and Google OAuth, single signup flow (no separa
 Set up PostHog before any feature-specific events fire.
 
 **Logic:**
-- `utils/posthog/client.ts` — browser client (`posthog-js`), initialized with `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST`, autocapture on
+- `instrumentation-client.ts` — browser client (`posthog-js`), initialized with `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` / `NEXT_PUBLIC_POSTHOG_HOST`, pageview capture and autocapture on
 - `utils/posthog/server.ts` — server client (`posthog-node`) for events that must only fire once something is confirmed server-side (payment, scan)
-- PostHog initialized once in the root layout
+- PostHog initialized once before hydration through Next.js client instrumentation
 - `posthog.identify()` called after login with the Supabase user ID
 - `posthog.reset()` called on logout
 

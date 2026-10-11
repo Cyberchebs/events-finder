@@ -379,19 +379,14 @@ Check first: Check `AGENTS.md` for an installed PostHog skill. If a PostHog MCP 
 ### Client Setup (Browser)
 
 ```typescript
-// utils/posthog/client.ts
+// instrumentation-client.ts initializes the browser SDK before hydration
 import posthog from "posthog-js";
 
-export function initPostHog() {
-  if (typeof window !== "undefined" && !posthog.__loaded) {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-      capture_pageview: true,
-      autocapture: true,
-    });
-  }
-  return posthog;
-}
+posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
+  api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
+  capture_pageview: true,
+  autocapture: true,
+});
 
 // Capture a client-side event
 posthog.capture("checkout_started", { event_id, ticket_type_id, quantity });

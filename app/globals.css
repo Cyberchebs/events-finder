@@ -1,19 +1,108 @@
-@import "tailwidcss"
+@import "tailwindcss";
 
-:root{
+@theme {
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
+  --color-background: #f4f4f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #fafafc;
+  --color-sunken: #eeeef3;
+
+  --color-border: #e3e2ea;
+  --color-line-2: #cfcdd9;
+
+  --color-ink: #16141f;
+  --color-ink-2: #5b5768;
+  --color-ink-3: #8e8a9c;
+
+  --color-brand: #5b3df5;
+  --color-brand-ink: #ffffff;
+  --color-brand-soft: #ece8fe;
+  --color-brand-line: #c9befb;
+
+  --color-live: #e0353b;
+  --color-live-soft: #fdecec;
+  --color-live-ink: #8e1a1f;
+
+  --color-ok: #12805c;
+  --color-ok-soft: #e1f4ec;
+  --color-ok-ink: #0b5340;
+
+  --color-warn: #b4690e;
+  --color-warn-soft: #fbeedc;
+
+  --color-tier-a-1: #5b3df5;
+  --color-tier-a-2: #2e1b9e;
+  --color-tier-b-1: #0e9e82;
+  --color-tier-b-2: #065c4c;
+  --color-tier-c-1: #e2603a;
+  --color-tier-c-2: #96341a;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 9999px;
 }
 
-@theme inline{
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: #0c0b12;
+    --color-surface: #16151e;
+    --color-surface-2: #1c1b26;
+    --color-sunken: #100f18;
 
-}
+    --color-border: #282633;
+    --color-line-2: #3a3747;
 
-@media(prefers-color-scheme: dark){
-  :root{
+    --color-ink: #f2f1f6;
+    --color-ink-2: #a9a5b8;
+    --color-ink-3: #77738a;
 
+    --color-brand: #8b74ff;
+    --color-brand-ink: #12101c;
+    --color-brand-soft: #231c4a;
+    --color-brand-line: #3e3277;
+
+    --color-live: #ff6b6b;
+    --color-live-soft: #3a1718;
+    --color-live-ink: #ffb3b3;
+
+    --color-ok: #3dd39e;
+    --color-ok-soft: #10322a;
+    --color-ok-ink: #8fe9cb;
+
+    --color-warn: #e8a33d;
+    --color-warn-soft: #38270f;
   }
 }
 
-body{
-  
+[data-theme="dark"] {
+  --color-background: #0c0b12;
+  --color-surface: #16151e;
+  --color-surface-2: #1c1b26;
+  --color-sunken: #100f18;
+  --color-border: #282633;
+  --color-line-2: #3a3747;
+  --color-ink: #f2f1f6;
+  --color-ink-2: #a9a5b8;
+  --color-ink-3: #77738a;
+  --color-brand: #8b74ff;
+  --color-brand-ink: #12101c;
+  --color-brand-soft: #231c4a;
+  --color-brand-line: #3e3277;
+  --color-live: #ff6b6b;
+  --color-live-soft: #3a1718;
+  --color-live-ink: #ffb3b3;
+  --color-ok: #3dd39e;
+  --color-ok-soft: #10322a;
+  --color-ok-ink: #8fe9cb;
+  --color-warn: #e8a33d;
+  --color-warn-soft: #38270f;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }

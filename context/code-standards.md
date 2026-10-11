@@ -239,8 +239,14 @@ All PostHog events must use these exact event names. Never invent new event name
 | `ticket_purchased` | Payment confirmed | **Server** (webhook handler) | `event_id`, `ticket_type_id`, `order_id`, `amount`, `commission_amount` |
 | `ticket_scanned` | Check-in scan attempted | **Server** (check-in route) | `ticket_id`, `event_id`, `scan_result` |
 | `organizer_onboarding_step_completed` | Each onboarding wizard step saved | Client/Server | `step_name`, `organizer_id` |
+| `google_sign_in_started` | User starts Google OAuth | Client | none |
+| `account_signup_submitted` | User submits email signup | Client | none |
+| `email_sign_in_submitted` | User submits email sign-in | Client | none |
+| `email_sign_in_succeeded` | Email sign-in succeeds | Client | none |
+| `category_filter_selected` | User changes Discover category | Client | `category` |
+| `city_filter_selected` | User changes Discover city | Client | `city` |
 
-These six events are the only events in this project (autocapture covers general clicks/pageviews on top of these). Do not add more without updating this list first.
+These twelve custom events are the only events in this project (autocapture covers general clicks/pageviews on top of these). Do not add more without updating this list first. Never include email, password, or raw search text in event properties.
 
 `ticket_purchased` and `ticket_scanned` **must** be fired server-side — they are the source of truth for the organizer dashboard funnel and check-in rate, and firing them client-side would let a closed tab or a spoofed request produce incorrect numbers.
 
@@ -261,8 +267,8 @@ All environment variables defined in `.env.local` for development. Never hardcod
 | `QR_TOKEN_SECRET` | `lib/qr.ts` (server only — signs/verifies QR tokens) |
 | `UPSTASH_REDIS_REST_URL` | `lib/rate-limit.ts` |
 | `UPSTASH_REDIS_REST_TOKEN` | `lib/rate-limit.ts` (server only) |
-| `NEXT_PUBLIC_POSTHOG_KEY` | `utils/posthog/client.ts` |
-| `NEXT_PUBLIC_POSTHOG_HOST` | `utils/posthog/client.ts`, `utils/posthog/server.ts` |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | `instrumentation-client.ts`, `instrumentation.ts` |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `instrumentation-client.ts`, `instrumentation.ts` |
 | `POSTHOG_PROJECT_API_KEY` | `utils/posthog/server.ts` |
 
 `NEXT_PUBLIC_` prefix means the variable is exposed to the browser. Never add `NEXT_PUBLIC_` to a secret key — `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `QR_TOKEN_SECRET`, and `UPSTASH_REDIS_REST_TOKEN` must never carry that prefix.
