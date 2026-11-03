@@ -20,7 +20,7 @@ export function CategoryChips({
             onClick={() => onSelectCategory(category)}
             className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
               isActive
-                ? "bg-brand text-brand-ink"
+                ? "border border-brand-line bg-brand-soft text-brand"
                 : "border border-border bg-surface text-ink-2 hover:border-line-2"
             }`}
           >
@@ -31,4 +31,3 @@ export function CategoryChips({
     </div>
   );
 }
-

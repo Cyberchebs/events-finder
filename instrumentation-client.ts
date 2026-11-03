@@ -20,9 +20,24 @@ if (!projectToken || !host) {
     api_host: host,
     defaults: "2026-01-30",
     capture_pageview: true,
-    autocapture: true,
+    autocapture: false,
     capture_exceptions: true,
     debug: process.env.NODE_ENV === "development",
+    before_send: (event) => {
+      if (window.location.pathname.startsWith("/scan/")) {
+        return null;
+      }
+      if (event?.properties?.$current_url) {
+        try {
+          if (new URL(String(event.properties.$current_url)).pathname.startsWith("/scan/")) {
+            return null;
+          }
+        } catch {
+          return event;
+        }
+      }
+      return event;
+    },
   });
 
   const supabase = createClient();

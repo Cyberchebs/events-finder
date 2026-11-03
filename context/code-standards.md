@@ -234,19 +234,13 @@ All PostHog events must use these exact event names. Never invent new event name
 | Event | When | Fired from | Key Properties |
 |---|---|---|---|
 | `event_page_viewed` | Event detail page loads | Client | `event_id`, `organizer_id`, `is_online` |
-| `checkout_started` | Attendee selects a tier and starts checkout | Client | `event_id`, `ticket_type_id`, `quantity` |
-| `checkout_payment_initiated` | Redirect to Paystack | Client | `event_id`, `order_id`, `amount` |
+| `checkout_started` | Checkout API confirms a paid reservation and returns its Paystack authorization URL | Client | `event_id`, `ticket_type_id`, `quantity` |
+| `checkout_payment_initiated` | Redirect to Paystack | Client | `event_id`, `ticket_type_id`, `reservation_id`, `quantity`, `amount` |
 | `ticket_purchased` | Payment confirmed | **Server** (webhook handler) | `event_id`, `ticket_type_id`, `order_id`, `amount`, `commission_amount` |
-| `ticket_scanned` | Check-in scan attempted | **Server** (check-in route) | `ticket_id`, `event_id`, `scan_result` |
+| `ticket_scanned` | Check-in scan outcome (`success`, `already_used`, or `invalid`) | **Server** (check-in route) | `ticket_id` (nullable for malformed QR), `event_id`, `scan_result`, `gate_label` |
 | `organizer_onboarding_step_completed` | Each onboarding wizard step saved | Client/Server | `step_name`, `organizer_id` |
-| `google_sign_in_started` | User starts Google OAuth | Client | none |
-| `account_signup_submitted` | User submits email signup | Client | none |
-| `email_sign_in_submitted` | User submits email sign-in | Client | none |
-| `email_sign_in_succeeded` | Email sign-in succeeds | Client | none |
-| `category_filter_selected` | User changes Discover category | Client | `category` |
-| `city_filter_selected` | User changes Discover city | Client | `city` |
 
-These twelve custom events are the only events in this project (autocapture covers general clicks/pageviews on top of these). Do not add more without updating this list first. Never include email, password, or raw search text in event properties.
+These six custom events are the approved product and operational signals. The checkout funnel is paid-only; free-ticket orders are not represented by these funnel stages. Browser pageviews and exceptions remain enabled, but click/form autocapture is disabled. Do not add events without updating this list first. Never include email, password, or raw search text in event properties.
 
 `ticket_purchased` and `ticket_scanned` **must** be fired server-side — they are the source of truth for the organizer dashboard funnel and check-in rate, and firing them client-side would let a closed tab or a spoofed request produce incorrect numbers.
 
@@ -260,18 +254,22 @@ All environment variables defined in `.env.local` for development. Never hardcod
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `utils/supabase/client.ts`, `utils/supabase/server.ts` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `utils/supabase/client.ts`, `utils/supabase/server.ts` |
+| `NEXT_PUBLIC_SITE_URL` | Paystack callback URL base |
 | `SUPABASE_SERVICE_ROLE_KEY` | Webhook handler, scheduled jobs only — **never `NEXT_PUBLIC_`** |
-| `PAYSTACK_SECRET_KEY` | `lib/paystack.ts` (server only) |
+| `PAYSTACK_SECRET_KEY` | `lib/paystack-provider.ts` (server only) |
 | `PAYSTACK_WEBHOOK_SECRET` | `app/api/webhooks/paystack/route.ts` (server only) |
-| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Client-side Paystack initialization, if used |
 | `QR_TOKEN_SECRET` | `lib/qr.ts` (server only — signs/verifies QR tokens) |
 | `UPSTASH_REDIS_REST_URL` | `lib/rate-limit.ts` |
-| `UPSTASH_REDIS_REST_TOKEN` | `lib/rate-limit.ts` (server only) |
+| `UPSTASH_REDIS_REST_TOKEN` | `lib/rate-limit.ts` (server only; checkout and check-in fail closed if missing) |
+| `CRON_SECRET` | Vercel Cron reservation-expiry route (server only) |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | `instrumentation-client.ts`, `instrumentation.ts` |
 | `NEXT_PUBLIC_POSTHOG_HOST` | `instrumentation-client.ts`, `instrumentation.ts` |
 | `POSTHOG_PROJECT_API_KEY` | `utils/posthog/server.ts` |
+| `POSTHOG_API_HOST` | PostHog private query API (server only) |
+| `POSTHOG_PROJECT_ID` | PostHog private query API |
+| `POSTHOG_PERSONAL_API_KEY` | PostHog private query API (server-only personal API key with `query:read`) |
 
-`NEXT_PUBLIC_` prefix means the variable is exposed to the browser. Never add `NEXT_PUBLIC_` to a secret key — `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `QR_TOKEN_SECRET`, and `UPSTASH_REDIS_REST_TOKEN` must never carry that prefix.
+`NEXT_PUBLIC_` prefix means the variable is exposed to the browser. Never add `NEXT_PUBLIC_` to a secret key — `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `QR_TOKEN_SECRET`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`, `POSTHOG_PROJECT_API_KEY`, and `POSTHOG_PERSONAL_API_KEY` must never carry that prefix.
 
 ---
 
@@ -284,9 +282,10 @@ Fixed business constants are defined once. Never hardcode these values anywhere 
 export const COMMISSION_RATE = 0.203; // 20.3%, fixed across all markets
 export const RESERVATION_HOLD_MINUTES = 10;
 export const MAX_TICKET_CARD_IMAGE_MB = 50;
+export const MAX_TICKETS_PER_ORDER = 10;
 ```
 
-Import and use these constants everywhere the value is needed — never re-type `0.203` or `10` inline.
+Import and use these constants everywhere the value is needed — never re-type `0.203`, `10`, or `50` inline. The database reservation RPC mirrors the 10-minute and 10-ticket invariants so direct RPC calls cannot bypass them.
 
 ---
 
@@ -334,8 +333,10 @@ Approved dependencies for this project:
 - `qrcode` — QR code generation on the client for ticket cards
 - `date-fns` — relative date formatting ("In 4 days", countdowns)
 - `@upstash/ratelimit` + `@upstash/redis` — rate limiting on checkout, webhook, and check-in endpoints
+- `@zxing/browser` — client-side camera QR decoding for online check-in; send only the decoded signed token to the server
 - `zod` — schema validation
 - `lucide-react` — icons
+- `three` + `@react-three/fiber` — actual extruded ticket meshes, materials, and front-face textures
 - `tailwindcss` — styling
 - `shadcn/ui` components — UI primitives
 

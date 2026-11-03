@@ -6,9 +6,21 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 1 — Feature 04 Database Schema (core tables and RLS applied; storage setup remains)
-**Last completed:** Applied and recorded the Phase 4 schema and security migrations in the linked Supabase project
-**Next:** Create the `ticket-card-images` storage bucket and its upload/read policies
+**Phase:** Phase 6 — Online Events (Feature 23 UI approved; Feature 24 implemented locally)
+**Last completed:** Phase 6 Feature 24 implemented; migration applied and linked schema/access-boundary checks passed
+**Next:** Verify the locked/unlocked ticket flow against a test online event with an issued ticket
+
+**Current limitation:** The Phase 6 migration is applied and verified in remote history. The legacy public URL column is absent; direct access to the private schema/table and anonymous RPC execution are denied, while authenticated access RPC execution is granted. No end-to-end online event/ticket fixture was available to exercise the locked and unlocked results. The development-only `/preview/online-join` route remains mock-only. PostHog private-query settings remain required for live funnel analytics. Dashboard/gate-management visual sign-off and an end-to-end check-in flow remain outstanding. Paystack sandbox/webhook verification remains outstanding. Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6 migrations are applied and verified in remote migration history. Feature 08 remains implemented but unverified against a published event.
+
+**Recent fix:** Completed organizers can create additional events without being redirected to the latest published event. New-event actions create a distinct draft; draft continuation carries its event ID through the wizard.
+
+**Recent design alignment:** Responsive navigation, Discover, login, organizer setup, ticket wallet (including the empty state), check-in landing/scanning, and the `/profile` route were aligned to the current screens in `context/tik-booth-designs`. The profile page now includes real ticket, organizer-dashboard/onboarding, and sign-out actions; unsupported profile-edit, interests, privacy, and notification controls were not fabricated. Pages without a direct screen retain their behavior and use the shared design tokens and related page patterns.
+
+**Design alignment validation:** Focused ESLint, TypeScript, production build, and whitespace checks passed after the latest empty-wallet and scanner-landing refinements. Discover and login were opened in the local browser; authenticated dashboard, onboarding, and ticket-wallet states were not visually exercised because no signed-in test session was available. Comparison of all live routes/states against the reference set remains incomplete, including checkout-result and full ticket-detail screens.
+
+**Ticket card customization:** Per-tier preset/custom color, solid/torn shape, normal/metallic finish, and organizer-selected black/white text persist through the existing migration. The CSS-only facade is replaced by actual React Three Fiber extruded meshes with physical normal/metallic materials, artwork textures, and signed-QR textures on an opaque white face. Organizer previews and issued wallet tickets share the renderer; the accessible 2D face remains usable when WebGL is unavailable or the context is lost. Pointer/touch and keyboard rotation are synchronized between the mesh and readable DOM text. Focused and full ESLint, TypeScript, production build, and browser checks passed; the browser verified both rendered cards and the forced no-WebGL fallback. The already-applied `20261103194200_custom_ticket_cards.sql` migration was not reapplied.
+
+**Profile theme switch:** The Profile settings now control app-wide light/dark mode. New or unsaved preferences default to light regardless of system setting; the selected theme is saved in browser storage and initialized before first paint. Focused ESLint, TypeScript, production build, and whitespace checks passed. Browser checks confirmed light mode under a forced system-dark preference, saved dark mode after reload, and dark mode across client navigation. A signed-in session was unavailable, so the Profile control itself was not exercised in-browser.
 
 ---
 
@@ -25,43 +37,43 @@ Update this file after every completed feature. Any AI agent reading this should
 - [x] ui-registry.md
 - [x] build-plan.md
 - [x] Full UI screen set (35 screens, light + dark, published as an artifact + exported PNGs)
-- [ ] progress-tracker.md — this file, created, to be updated from here on
+- [x] progress-tracker.md — maintained as implementation and validation progress changes
 
 ### Phase 1 — Foundation
 - [x] 01 Homepage / Discover shell — Full UI (mock data)
-- [ ] 02 Auth — in progress (SSR clients, callback, proxy protection, email/password and Google flow scaffolded; desktop navbar reflects session state and supports logout)
-- [ ] 03 PostHog Initialization — browser SDK, pageviews/autocapture, and current auth/Discover events implemented; server event client pending
-- [ ] 04 Database Schema — core tables, enums, and RLS deployed; storage bucket/policies pending
+- [x] 02 Auth — Supabase SSR clients, OAuth callback, proxy protection, email/password and Google flows; session-aware desktop navbar and logout
+- [x] 03 PostHog Initialization — browser/server SDKs, pageviews and exception capture; click/form autocapture disabled; six approved product/operational events
+- [x] 04 Database Schema — core tables, enums, and RLS deployed; `ticket-card-images` bucket/policies deployed
 
 ### Phase 2 — Discover & Event Detail
-- [ ] 05 Discover Page — Full UI (real categories, mock events)
-- [ ] 06 Discover Page — Real Data
-- [ ] 07 Event Detail Page — Full UI
-- [ ] 08 Event Detail Page — Real Data
+- [x] 05 Discover Page — Full UI (category/city filters, search, loading/error/empty states)
+- [x] 06 Discover Page — Real Data (server feed and React Query refresh; API verified with live database)
+- [x] 07 Event Detail Page — Full UI
+- [ ] 08 Event Detail Page — Real Data (implemented; awaiting a published event for live verification)
 
 ### Phase 3 — Checkout & Ticket Issuance
-- [ ] 09 Checkout Page — Full UI
-- [ ] 10 Reservation + Checkout Logic
-- [ ] 11 Payment Webhook + Ticket Issuance
-- [ ] 12 My Tickets — Full UI
-- [ ] 13 My Tickets — Real Data
+- [x] 09 Checkout Page — Full UI (event tier selection and checkout quantity stepper; max 10 per order)
+- [x] 10 Reservation + Checkout Logic (authenticated start, rate limiting, atomic inventory reservation, free-ticket issuance, Paystack redirect/status flow, and provider-aware expiry worker; local DB validation pending)
+- [x] 11 Payment Webhook + Ticket Issuance (signature-verified, idempotent paid issuance; sandbox verification pending)
+- [x] 12 My Tickets — Full UI (issued QR cards, used/void rows, empty state, event actions)
+- [x] 13 My Tickets — Real Data (owner-scoped reads and safe event-details RPC; migration not applied)
 
 ### Phase 4 — Organizer Onboarding & Event Creation
-- [ ] 14 Organizer Onboarding — Full UI
-- [ ] 15 Onboarding Logic — Profile & Payout
-- [ ] 16 Onboarding Logic — Event & Ticket Tiers
+- [x] 14 Organizer Onboarding — Full UI (five-step wizard)
+- [x] 15 Onboarding Logic — Profile & Payout
+- [x] 16 Onboarding Logic — Event & Ticket Tiers
 
 ### Phase 5 — Door Staff Access, Check-in & Organizer Dashboard
-- [ ] 17 Door Staff Access — Full UI
-- [ ] 18 Door Staff Access — Real Logic
-- [ ] 19 Check-in Scanner — Full UI
-- [ ] 20 Check-in Scanner — Real Logic
-- [ ] 21 Organizer Dashboard — Full UI
-- [ ] 22 Organizer Dashboard — Real Data
+- [x] 17 Door Staff Access — Full UI (mock gate-management screen and usher landing screen; visual sign-off pending)
+- [x] 18 Door Staff Access — Real Logic (organizer actions, one-time hashed gate links, validation and revocation implemented; migration applied)
+- [x] 19 Check-in Scanner — Full UI (mock scanning and all four sample result states; visual sign-off pending)
+- [x] 20 Check-in Scanner — Real Logic (online camera scans, signed QR verification, atomic check-in and per-gate rate limit implemented; migration applied)
+- [x] 21 Organizer Dashboard — Full UI (mock overview, event dashboard, funnel, and per-gate breakdown; visual sign-off pending)
+- [x] 22 Organizer Dashboard — Real Data (organizer-scoped metrics and PostHog funnel query implemented; migration applied; PostHog query configuration pending)
 
 ### Phase 6 — Online Events
-- [ ] 23 Online Event Join Screen — Full UI
-- [ ] 24 Online Event Join Screen — Real Logic
+- [x] 23 Online Event Join Screen — Full UI (locked/unlocked token-styled states and development-only mock preview; visually approved)
+- [x] 24 Online Event Join Screen — Real Logic (private URL storage, draft organizer input, publish guard, ticket-checked RPC and join route implemented; migration applied)
 
 ---
 
@@ -76,6 +88,8 @@ These were locked in during planning, before any code was written, and should no
 - **No refunds and no resale/transfer of tickets, anywhere in the product.** A purchased, unused ticket is simply unused. This was a deliberate, revisited decision — resale was originally in scope, then explicitly removed.
 - **No age-restriction feature.** Considered and explicitly dropped — self-declared-only enforcement was judged not worth building for MVP.
 - Money is always an integer in kobo, never a float. `COMMISSION_RATE`, `RESERVATION_HOLD_MINUTES`, and `MAX_TICKET_CARD_IMAGE_MB` are defined once in `lib/constants.ts`.
+- Checkout quantity is capped at 10 tickets per order and must be validated on both client and server.
+- A reservation's 10-minute hold is the earliest Paystack verification time, not an unconditional inventory release; inventory remains held while Paystack reports success or pending, and successful ticket issuance still requires the webhook.
 - Overselling is prevented by an atomic Postgres RPC (`reserve_ticket_inventory`) plus a time-limited `reservations` hold — not a bare "transaction," a specific `UPDATE ... WHERE ... RETURNING` pattern.
 - Ticket issuance is **webhook-driven and idempotent** — a `processed_webhook_events` table keyed on Paystack's event id prevents double-issuance on a retried webhook. Paystack signs webhooks with **HMAC-SHA512**, not SHA256.
 - QR codes encode an **HMAC-signed token**, never a raw `ticket_id`, to prevent a screenshotted ticket from being turned into a working duplicate.
@@ -84,7 +98,8 @@ These were locked in during planning, before any code was written, and should no
 - Events require both a `starts_at` **and** `ends_at` — the latter exists specifically to compute the "Live" badge, which is otherwise undefined.
 - "Live" status, the reservation-hold countdown, and the online-event unlock countdown are all computed from **server-provided timestamps**, never the client device clock.
 - Ticket card images: accept up to 50MB on upload, compress/resize server-side before ever rendering — the cap is enforced at the Supabase Storage bucket policy level, not just client-side.
-- PostHog: six approved events total (`event_page_viewed`, `checkout_started`, `checkout_payment_initiated`, `ticket_purchased`, `ticket_scanned`, `organizer_onboarding_step_completed`). `ticket_purchased` and `ticket_scanned` are **server-fired only**. Organizer dashboard funnel numbers are queried server-side from PostHog's API, filtered per-organizer — never pointed at PostHog's shared raw UI.
+- Ticket card image storage is public-read and limited to authenticated organizers writing within their own user-ID folder; the bucket accepts JPEG, PNG, and WebP up to 50MB.
+- PostHog: six approved custom events; pageviews and exception capture remain enabled while click/form autocapture is disabled. Onboarding step captures use `step_name` and `organizer_id`. `ticket_purchased` and `ticket_scanned` are **server-fired only**. Organizer dashboard funnel numbers are queried server-side from PostHog's API, filtered per-organizer — never pointed at PostHog's shared raw UI.
 - UI: Plus Jakarta Sans throughout, mobile uses a fixed bottom tab bar (no top navbar), desktop uses a top navbar plus a Discover-only category sidebar. The ticket card is the one component allowed a colored/gradient background and a heavy shadow — every other card stays flat white/`bg-surface`.
 - Full token set, component registry, and 35-screen UI reference already exist and are the source of truth for anything visual — see `ui-tokens.md`, `ui-registry.md`, and the published UI artifact.
 
@@ -97,3 +112,4 @@ These were locked in during planning, before any code was written, and should no
 - `ui-tokens.md` currently documents the token values exactly as they exist in the published HTML artifact's inline `<style>` block. When `app/globals.css` is created in Feature 01, the `@theme` block must be copied from `ui-tokens.md` verbatim — not re-derived from scratch — to avoid the two drifting apart.
 - `types/database.types.ts` defines the current application-facing database types. Regenerate/compare it against the live schema as the schema evolves.
 - Nothing in `project-scope.md`'s "Open Questions" section remains unresolved as of this tracker's creation — all prior open items were explicitly closed out during planning (see `project-scope.md` for the resolution of each).
+- Features 15–16 are implemented with resumable authenticated saves, Paystack subaccount setup, private staged image uploads optimized server-side, validated draft publishing, and ticket-tier persistence. Migration `20261014174000_phase4_onboarding_storage.sql` is applied to the linked Supabase project and passes linked schema lint. No real Paystack payout details were used for verification.

@@ -49,7 +49,9 @@
 │   │   │   └── page.tsx                       → Checkout
 │   │   ├── my-tickets/
 │   │   │   ├── page.tsx                       → Ticket wallet
-│   │   │   └── [ticket_id]/page.tsx           → Expanded ticket detail
+│   │   │   └── [ticket_id]/
+│   │   │       ├── page.tsx                   → Expanded ticket detail
+│   │   │       └── join/page.tsx               → Ticket-checked online event access
 │   │   ├── profile/
 │   │   │   └── page.tsx                       → Account settings + "Become an organizer"
 │   │   ├── onboarding/
@@ -92,7 +94,8 @@
 │   │   │   ├── TicketCard.tsx
 │   │   │   └── UsedTicketRow.tsx
 │   │   ├── events/
-│   │   │   └── OnlineJoinLock.tsx
+│   │   │   ├── OnlineJoinLock.tsx
+│   │   │   └── OnlineJoinAccess.tsx
 │   │   ├── onboarding/
 │   │   │   ├── WizardShell.tsx
 │   │   │   ├── ProfileStep.tsx
@@ -211,23 +214,23 @@ validateDoorStaffToken() — hash comparison, not revoked, matches event_id
         ↓
    valid → scanner UI renders, gate_label shown in header
         ↓
-Usher scans a QR (zxing decodes client-side, only the token string is sent)
+Usher scans a QR (`@zxing/browser` decodes client-side; only the token string is sent)
         ↓
-POST /api/checkin/scan { door_staff_token, qr_token }
+POST /api/checkin/scan { event_id, qr_token } with the gate token in a request header
         ↓
-1. Re-validate door-staff token (short-circuits immediately if invalid/revoked)
+1. `validate_door_staff_access` checks the hashed door-staff token and revocation state
         ↓
 2. verifyTicketToken() — HMAC signature check on the QR token
         ↓
    invalid signature → scan_result: 'invalid', no DB write
         ↓
-3. Atomic: UPDATE tickets SET status='used', scanned_at=now(), scanned_gate_label=$gate
-          WHERE id=$1 AND status='issued' RETURNING *
+3. `scan_door_staff_ticket` revalidates the token and atomically updates the ticket only
+   if it is still `issued` and belongs to the event
         ↓
    0 rows → scan_result: 'already_used'
    1 row  → scan_result: 'success'
         ↓
-ticket_scanned PostHog event (server, this route) with gate_label
+`ticket_scanned` PostHog event (server, this route) with gate_label
         ↓
 Response rendered as ScanResultScreen — no offline queue, network failure
 surfaces as its own "No connection" state, never a silent accept
@@ -240,20 +243,28 @@ User taps "Become an organizer" on Profile
         ↓
 profiles.is_organizer = true, onboarding_step = 1
         ↓
-Step 1 (Profile) → actions/onboarding.ts → profiles updated, onboarding_step = 2
+Step 1 (Profile) → actions/onboarding.ts → profiles updated, logo optimized and stored,
+                → onboarding_step = 2
         ↓
 Step 2 (Payout) → PaymentProvider.createSplitRecipient() → Paystack subaccount created
-                → profiles.paystack_subaccount_code saved, onboarding_step = 3
+                → only profiles.paystack_subaccount_code saved; bank details are transient,
+                  BVN is not requested, onboarding_step = 3
         ↓
 Step 3 (Event) → events row created, status: 'draft', onboarding_step = 4
+                → optional cover image optimized and stored
         ↓
-Step 4 (Tiers) → ticket_types rows created, card image uploaded to
-                 ticket-card-images bucket (accept ≤50MB, compress server-side),
+Step 4 (Tiers) → ticket_types rows created via an ownership-checked RPC; optional card images
+                 are optimized and stored in ticket-card-images (accept ≤50MB),
                  onboarding_step = 5
         ↓
-Step 5 (Publish) → events.status = 'published'
+Step 5 (Publish) → validated, atomic RPC changes events.status to 'published'
+                 and profiles.onboarding_step to null
         ↓
 organizer_onboarding_step_completed PostHog event fired after each step
+
+For subsequent events, "Create event" starts a fresh draft at Step 3 and reuses the saved
+organizer and payout profile. "Continue setup" passes the selected draft ID through event,
+ticket, and publish steps so one draft cannot be mistaken for another.
 ```
 
 ### Door Staff Access
@@ -303,12 +314,22 @@ takes effect on the usher's very next scan attempt, not next page load
 | image_url                    | text          |                                              |
 | category                       | text          |                                              |
 | format                           | text          | `in_person` \| `online`                        |
-| venue_address                      | text          | Null for online events                          |
-| online_join_url                      | text          | Never returned by the API before the reveal time |
+| venue_address                      | text          | Physical address or online platform label; never the attendee join URL |
 | starts_at                              | timestamptz   | UTC — required                                    |
 | ends_at                                  | timestamptz   | UTC — required, drives "Live" status                |
 | status                                    | text          | `draft` \| `published`                              |
 | currency                                    | text          | Default `'NGN'`                                      |
+
+### `private.event_online_join_links`
+
+| Column       | Type        | Notes                                                  |
+| ------------ | ----------- | ------------------------------------------------------ |
+| event_id     | uuid        | References `events`; one private link per event        |
+| join_url     | text        | Direct client access revoked; returned only by RPC     |
+| created_at   | timestamptz |                                                        |
+| updated_at   | timestamptz |                                                        |
+
+The private schema has no client grants or direct-read policies. Organizer draft writes, draft prefill, and attendee access use authenticated RPCs. The attendee RPC verifies an issued ticket and paid order, then returns the URL only at or after `starts_at - 30 minutes`.
 
 ### `ticket_types`
 
@@ -384,11 +405,12 @@ takes effect on the usher's very next scan attempt, not next page load
 
 | Bucket                 | Path                                              | Contents                          |
 | ------------------------ | ---------------------------------------------------| ------------------------------------|
-| ticket-card-images         | `ticket-card-images/{organizer_id}/{ticket_type_id}.webp` | Per-tier card images, compressed server-side |
-| organizer-logos               | `organizer-logos/{organizer_id}/logo.webp`          | Organizer profile logo               |
-| event-images                     | `event-images/{event_id}/cover.webp`                  | Event cover image                       |
+| ticket-card-images         | `{organizer_id}/{ticket_type_id}/{uuid}.webp` | Per-tier card images, compressed server-side |
+| organizer-logos               | `{organizer_id}/{uuid}.webp`          | Organizer profile logo               |
+| event-images                     | `{organizer_id}/{event_id}/{uuid}.webp`                  | Event cover image                       |
+| onboarding-image-uploads     | `{organizer_id}/{uuid}.{jpg,png,webp}` | Private temporary uploads, removed after processing |
 
-Access: authenticated write, public read. 50MB upload accepted; served copy is always the resized/compressed version — see `library-docs.md`.
+The three deliverable buckets are public-read and owner-scoped for writes. The staging bucket is private and owner-scoped; an authenticated route validates ownership, decodes and resizes images with Sharp, converts them to WebP, writes them to the relevant public bucket, updates the document URL, and removes the staged original. Uploads accept up to 50MB; rendered assets are optimized copies — see `library-docs.md`.
 
 ---
 
@@ -428,7 +450,7 @@ export async function createClient() {
 }
 ```
 
-A third path exists only for the webhook handler and scheduled jobs — a service-role client that bypasses RLS, imported nowhere else in the codebase (see `library-docs.md` → Service Role Key).
+A server-only service-role client is used by checkout's restricted free-ticket issuance RPC and trusted webhook/scheduled-job handlers. Door-staff scanning does not use it; it uses narrowly granted token-validating database RPCs.
 
 ---
 
@@ -483,7 +505,7 @@ Rules the AI agent must never violate:
 - `lib/` code never imports from `components/` or uses React hooks.
 - Server Actions are never called from `app/api/` route handlers, and vice versa.
 - All Supabase server-side writes use `await createClient()` from `utils/supabase/server.ts` — never the browser client.
-- The service-role Supabase client is imported in exactly two places (webhook handler, scheduled jobs) and never reachable from the browser.
+- The service-role Supabase client is server-only and never reachable from the browser. The scan endpoint uses narrow database RPCs and never imports the service-role client.
 - No hardcoded hex values or raw Tailwind color classes in components — tokens only, per `ui-tokens.md`.
 - `ticket_types.quantity_sold` is only ever changed via `reserve_ticket_inventory` — never a direct `.update()` from any code path.
 - Every Paystack webhook request is checked against `processed_webhook_events` before any side effect, and its signature verified before that.

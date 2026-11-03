@@ -2,9 +2,8 @@
 
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { ArrowRight, Globe, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, Globe, Mail, MapPin, ShieldCheck, Ticket } from "lucide-react";
 import { useRouter } from "next/navigation";
-import posthog from "posthog-js";
 import { createClient } from "@/utils/supabase/client";
 
 type Props = {
@@ -31,8 +30,6 @@ export function LoginForm({ callbackError, nextPath }: Props) {
     setIsGoogleLoading(true);
 
     try {
-      posthog.capture("google_sign_in_started");
-
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -59,8 +56,6 @@ export function LoginForm({ callbackError, nextPath }: Props) {
 
     try {
       if (mode === "signup") {
-        posthog.capture("account_signup_submitted");
-
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -79,15 +74,11 @@ export function LoginForm({ callbackError, nextPath }: Props) {
           return;
         }
       } else {
-        posthog.capture("email_sign_in_submitted");
-
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
           setError("Email or password is incorrect.");
           return;
         }
-
-        posthog.capture("email_sign_in_succeeded");
       }
 
       router.push(nextPath);
@@ -100,39 +91,74 @@ export function LoginForm({ callbackError, nextPath }: Props) {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-md rounded-[24px] border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(20,18,32,0.06),0_8px_24px_rgba(20,18,32,0.06)] sm:p-7">
-        <div className="mb-7 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-brand text-lg font-extrabold text-brand-ink">
-            T
+    <main className="flex min-h-screen items-center bg-background px-4 py-8 sm:px-6">
+      <div className="mx-auto grid w-full max-w-[1080px] items-center gap-8 md:grid-cols-[minmax(0,1fr)_440px] md:gap-12">
+        <section className="hidden md:block">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-[10px] font-extrabold text-brand">
+            <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
+            Built for the good times
           </div>
-          <div>
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-3">
-              Tik-Booth account
+          <h2 className="max-w-[460px] text-[30px] font-extrabold leading-tight tracking-tight text-ink">
+            Your city. Your people. Your next plan.
+          </h2>
+          <p className="mt-3 max-w-[440px] text-[13px] font-medium leading-6 text-ink-2">
+            From nights out to new experiences, find events worth showing up for.
+          </p>
+          <div className="mt-7 max-w-[440px] overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+            <div className="flex h-[210px] items-end bg-gradient-to-br from-tier-a-1 to-tier-a-2 p-5">
+              <div className="rounded-xl border border-brand-line bg-surface/95 px-4 py-3">
+                <p className="text-[9px] font-extrabold uppercase tracking-wide text-brand">
+                  Discover something good
+                </p>
+                <p className="mt-1 text-[16px] font-extrabold text-ink">
+                  Make room for a new memory.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-4 text-[11px] font-semibold text-ink-2">
+              <MapPin aria-hidden="true" className="h-4 w-4 text-brand" />
+              Local events, easy tickets, all in one place.
+            </div>
+          </div>
+        </section>
+
+        <div className="w-full rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-7">
+          <div className="mb-6 flex items-center gap-3 md:hidden">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand text-brand-ink">
+              <Ticket aria-hidden="true" className="h-5 w-5" />
+            </div>
+            <span className="text-[16px] font-extrabold tracking-tight text-ink">Tik-Booth</span>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-brand">
+              Your good time starts here
             </p>
-            <h1 className="text-[24px] font-extrabold tracking-[-0.04em] text-ink">
+            <h1 className="mt-1 text-[23px] font-extrabold tracking-tight text-ink">
               {mode === "signin" ? "Welcome back" : "Create your account"}
             </h1>
+            <p className="mt-1 text-[12px] font-medium text-ink-2">
+              Log in or sign up for the best of Lagos and beyond.
+            </p>
           </div>
-        </div>
 
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-4 py-3 text-[13px] font-bold text-ink transition-colors hover:bg-surface"
-          disabled={isGoogleLoading || isSubmitting}
-        >
-          <Globe className="h-4 w-4" />
-          {isGoogleLoading ? "Connecting…" : "Continue with Google"}
-        </button>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-3 text-[12px] font-bold text-ink transition-colors hover:bg-surface-2"
+            disabled={isGoogleLoading || isSubmitting}
+          >
+            <Globe className="h-4 w-4" />
+            {isGoogleLoading ? "Connecting…" : "Continue with Google"}
+          </button>
 
-        <div className="my-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-ink-3">
-          <span className="h-px flex-1 bg-border" />
-          or continue with email
-          <span className="h-px flex-1 bg-border" />
-        </div>
+          <div className="my-5 flex items-center gap-3 text-[10px] font-bold text-ink-3">
+            <span className="h-px flex-1 bg-border" />
+            or continue with email
+            <span className="h-px flex-1 bg-border" />
+          </div>
 
-        <form className="space-y-4" onSubmit={handleEmailSubmit}>
+          <form className="space-y-4" onSubmit={handleEmailSubmit}>
           <label className="block">
             <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.12em] text-ink-3">
               Email
@@ -210,13 +236,14 @@ export function LoginForm({ callbackError, nextPath }: Props) {
             {isSubmitting ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
             <ArrowRight className="h-4 w-4" />
           </button>
-        </form>
+          </form>
 
-        <div className="mt-6 flex items-start gap-2 rounded-xl bg-brand-soft px-3 py-2 text-[12px] text-ink-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 text-brand" />
-          <p>
-            Everyone signs up the same way. You can become an organizer any time after you join.
-          </p>
+          <div className="mt-6 flex items-start gap-2 rounded-xl bg-brand-soft px-3 py-2 text-[11px] leading-5 text-ink-2">
+            <ShieldCheck className="mt-0.5 h-4 w-4 text-brand" />
+            <p>
+              Everyone signs up the same way. You can become an organizer any time after you join.
+            </p>
+          </div>
         </div>
       </div>
     </main>

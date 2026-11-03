@@ -12,9 +12,9 @@ Build the complete public landing + Discover UI with mock event data.
 
 **UI:**
 - Navbar — logo, Discover, My Tickets, Create Event, Login/Signup
-- Discover page (mobile): search bar with an embedded location chip, horizontal scrollable category chips pinned directly beneath it
-- Discover page (desktop): persistent left sidebar of categories, search bar + separate location dropdown at the top of the content area
-- Event cards show: cover image, title, date/venue, and one status badge — **"Free"** (price = 0), a relative countdown (**"In 4 days"**, **"In 2 weeks"**, **"In 1 month"**), or **"Live"** (pulsing red dot) when the event is currently happening
+- Discover page (mobile): welcoming heading, city picker, search field, and horizontal scrollable category chips directly beneath it
+- Discover page (desktop): welcoming heading, search bar + separate location dropdown, and the same horizontal category chips
+- Event cards show: cover image, title, date/venue, starting price, and one status badge — **"Free"** (price = 0), a relative countdown (**"In 4 days"**, **"In 2 weeks"**, **"In 1 month"**), or **"Live"** (pulsing red dot) when the event is currently happening
 - Empty state (no events matching filters) and search-results state
 - Footer
 
@@ -58,7 +58,7 @@ All Supabase tables, storage buckets, and RLS policies created before any real d
 - `tickets` — `id`, `order_id`, `ticket_type_id`, `owner_id`, `qr_token`, `status` (`issued` | `used` | `void`), `scanned_at`, `scanned_gate_label`
 - `door_staff_access` — `id`, `event_id`, `gate_label`, `access_token_hash`, `created_by` (organizer's `user_id`), `revoked_at`, `created_at` — lets an usher scan for one event without a Tik-Booth account
 - `processed_webhook_events` — `event_id` (Paystack's own ID, primary key), `processed_at`
-- `resumes`-equivalent: **`ticket-card-images`** storage bucket (organizer-uploaded card images), authenticated write / public read, 50MB file size limit enforced at the bucket policy level
+- `resumes`-equivalent: **`ticket-card-images`** storage bucket (organizer-uploaded card images), authenticated organizer write restricted to the organizer's own folder / public read, 50MB file size limit enforced at the bucket policy level
 - RLS enabled on every table — attendees can only read/write their own `tickets`/`orders`/`reservations`; organizers can only write their own `events`/`ticket_types`; published events are publicly readable
 
 ---
@@ -71,7 +71,7 @@ Wire the category sidebar/chips and location+search bar to a real `categories` l
 **UI:** (already built in Phase 1 — this step is about making filters interactive against mock data)
 
 **Logic:**
-- Category chip/sidebar selection filters the mock dataset client-side
+- Category chip selection filters the mock dataset client-side
 - Location field opens a lightweight city picker (manual entry for MVP; GPS detection can come later)
 
 ### 06 Discover Page — Real Data
@@ -114,6 +114,7 @@ Build checkout UI with mock ticket/quantity data.
 - Card payment redirect button (Paystack)
 - Payment success screen
 - Payment failed screen — **shows the live reservation-hold countdown** ("your ticket is still held for 8:41")
+- Maximum 10 tickets per order, enforced in the checkout UI and by the server
 
 **Logic:** — none yet, mock data
 
@@ -123,10 +124,12 @@ This is the correctness-critical phase — implements the mechanism that prevent
 **Logic:**
 - `POST /api/checkout/start` — Postgres RPC performs the atomic `UPDATE ticket_types SET quantity_sold = quantity_sold + 1 WHERE quantity_sold < quantity_available RETURNING *`; on success, inserts a `reservations` row with `expires_at = now() + 10 minutes`
 - If the RPC returns 0 rows → tier is sold out, checkout aborts before ever reaching Paystack
+- Validate quantity from 1 to 10 on the server; free tiers issue tickets through a separate authenticated atomic path without contacting Paystack
 - `checkout_started` PostHog event fired client-side (`event_id`, `ticket_type_id`, `quantity`)
 - Client redirected to Paystack's `initializeTransaction` (via the `PaymentProvider` abstraction), passing `reference` = reservation ID
 - `checkout_payment_initiated` PostHog event fired on redirect
-- Scheduled job (Supabase cron / `pg_cron`) releases expired, unconfirmed reservations back to `quantity_available` every minute
+- Vercel Cron invokes `GET /api/jobs/expire-reservations` every minute with `CRON_SECRET`; the protected worker verifies expired reservations with Paystack before releasing inventory
+- The expiry worker verifies the Paystack transaction first; it releases stock only after Paystack reports a terminal non-success, so a delayed success webhook cannot race released inventory
 
 ### 11 Payment Webhook + Ticket Issuance
 **Logic:**
@@ -140,7 +143,8 @@ This is the correctness-critical phase — implements the mechanism that prevent
 Build the My Tickets list and expanded ticket detail with mock 3D cards.
 
 **UI:**
-- Grid/list of ticket cards — QR code rendered directly on the card face, background color/image per the organizer's tier design
+- Grid/list of ticket cards — actual React Three Fiber extruded ticket meshes with QR textures rendered directly on the card face, organizer-selected color/image, solid or notched torn geometry, normal or metallic physical finish, and black/white text
+- Issued cards rotate interactively under pointer movement, touch, or keyboard input; the face and QR remain visible, with an accessible 2D fallback when WebGL is unavailable
 - Dimmed treatment for `used` tickets
 - Empty state ("No tickets yet")
 - Expanded ticket detail: add-to-calendar, directions, full QR
@@ -149,7 +153,7 @@ Build the My Tickets list and expanded ticket detail with mock 3D cards.
 
 ### 13 My Tickets — Real Data
 **Logic:**
-- React Query fetch of the current user's `tickets` joined with `ticket_types`/`events` for card styling and event info
+- Authenticated server reads of the current user's `tickets`, `orders`, `ticket_types`, and `events` for card styling and event info
 - QR code rendered client-side from the stored `qr_token`
 
 ---
@@ -161,9 +165,9 @@ Build the 5-step wizard UI with mock/local state, skippable and resumable.
 
 **UI:**
 - Step 1 — Organizer profile (name, logo, bio)
-- Step 2 — Payout setup (bank name, account number, BVN)
+- Step 2 — Payout setup (bank name and account number sent directly to Paystack; no BVN, no stored bank details)
 - Step 3 — Create first event (title, in-person/online toggle, venue or format, date/time **and end date/time**, category, description, image)
-- Step 4 — Ticket tiers (name, price, quantity, per-tier card color/image)
+- Step 4 — Ticket tiers (name, price, quantity, per-tier preset/custom color, image, card shape, finish, and black/white text)
 - Step 5 — Review & publish (live preview of the public event card and the attendee ticket card)
 
 **Logic:** — none yet, mock/local state only
@@ -177,9 +181,10 @@ Build the 5-step wizard UI with mock/local state, skippable and resumable.
 
 ### 16 Onboarding Logic — Event & Ticket Tiers
 **Logic:**
-- Step 3 creates a `draft` row in `events`, including `starts_at`/`ends_at` as `timestamptz`
-- Step 4 creates `ticket_types` rows; card image uploaded to the `ticket-card-images` bucket (accept up to 50MB, server-side resize/compress to a display-optimized version before it's ever rendered on a card)
-- Step 5 flips `events.status` to `published`
+- Step 3 creates/resumes an owned `draft` row in `events`, including `starts_at`/`ends_at` as `timestamptz`; explicit new-event requests insert a new draft rather than reusing another draft, and optional cover image is optimized server-side
+- Step 4 creates/updates `ticket_types` rows through an ownership-checked RPC; optional card image is accepted up to 50MB, then resized/compressed server-side to WebP before it is rendered
+- Step 5 validates payout, event details, and ticket tiers in an atomic RPC before publishing the event and clearing `profiles.onboarding_step`
+- Once organizer and payout setup is complete, subsequent events reuse those settings and resume a selected draft by its event ID
 
 ---
 
@@ -199,7 +204,7 @@ Build the organizer's "manage door staff" screen and the usher's access-entry sc
 
 ### 18 Door Staff Access — Real Logic
 **Logic:**
-- `POST /api/door-staff/create` (organizer-only, ownership-checked) generates a random access token, stores only its hash in `door_staff_access` (`gate_label`, `event_id`), returns the plaintext token once in the response — never stored in plaintext, never retrievable again after this response
+- Organizer-only Server Actions create/revoke gate links after ownership checks. Creation generates a random access token, stores only its hash in `door_staff_access` (`gate_label`, `event_id`), and returns the plaintext token once — never stored in plaintext or retrievable again
 - The generated link is `/scan/[event_id]?token=...` — opening it validates the token server-side (hash comparison) before rendering anything; an invalid or revoked token shows a plain "This link isn't valid" screen, not the scanner
 - Organizer can revoke a gate's access instantly (`revoked_at` set) — mid-event revocation must take effect on the usher's very next scan attempt, not just on next page load
 - No Supabase Auth session is created for the usher — the access token in the URL **is** the credential for that one event, scoped to nothing else
@@ -210,7 +215,7 @@ Build the scanner UI with mock scan results, reached only through a valid door-s
 
 **UI:**
 - Idle/scanning state (camera viewfinder), gate label shown in the header, running "checked in / total sold" counter
-- Valid-scan result (green, attendee name, tier)
+- Valid-scan result (green, ticket tier; attendee identity is not shown to door staff)
 - Already-used result (red, "scanned X min ago" + which gate)
 - Invalid/forged-signature result (neutral grey, "Not a valid ticket")
 - "No connection" state — since scanning is online-only, a dropped connection must show this rather than silently failing or queuing
@@ -219,10 +224,10 @@ Build the scanner UI with mock scan results, reached only through a valid door-s
 
 ### 20 Check-in Scanner — Real Logic
 **Logic:**
-- `POST /api/checkin/scan` — first validates the door-staff access token (hash comparison, not revoked, matches the `event_id` in the URL), then verifies the QR token's signature, then checks ticket status
+- `POST /api/checkin/scan` — first validates the door-staff access token (hash comparison, not revoked, matches the event ID), then verifies the QR token's signature, then checks ticket status. The gate token is sent in `x-door-staff-token`; the event ID and signed QR token are in the request body
 - Atomic, idempotent status flip: `UPDATE tickets SET status = 'used', scanned_at = now(), scanned_gate_label = $gate WHERE id = $1 AND status = 'issued' RETURNING *` — a second near-simultaneous scan from any gate naturally fails this `WHERE` clause and is rejected, never double-admitting
 - `ticket_scanned` PostHog event fired server-side with `scan_result` (`success` / `already_used` / `invalid`) and `gate_label`
-- Rate limiting scoped to the **door-staff access token**, not the attendee — a real usher scanning a fast-moving queue is legitimate high-frequency traffic, not abuse (generous limit, e.g. 60/min per token)
+- Rate limiting scoped to the **door-staff gate ID**, not the attendee — a real usher scanning a fast-moving queue is legitimate high-frequency traffic, not abuse (60 scans/minute per gate; fail closed if the limiter is unavailable)
 - Client shows the explicit "No connection" state on any network failure — there is no offline fallback or local queue in MVP
 
 ### 21 Organizer Dashboard — Full UI
@@ -238,8 +243,8 @@ Build the dashboard UI with mock stats and mock PostHog funnel data.
 
 ### 22 Organizer Dashboard — Real Data
 **Logic:**
-- Tickets sold / revenue queried directly from `tickets`/`orders` (Supabase, scoped by RLS to the organizer's own events)
-- PostHog funnel numbers queried server-side via the PostHog API, filtered by `event_id`/`organizer_id`, **never** pointed directly at PostHog's raw shared UI — enforces the same per-organizer data isolation as everything else
+- Tickets sold / net earnings queried through ownership-checking Supabase RPCs; those RPCs aggregate paid orders and valid issued/used tickets only
+- PostHog funnel numbers queried server-side via the private PostHog query API, filtered to event IDs returned by the organizer-scoped RPC, **never** pointed directly at PostHog's raw shared UI — enforces the same per-organizer data isolation as everything else
 - Per-gate breakdown queried from `tickets.scanned_gate_label`, grouped, scoped to the organizer's own event
 - Verification step: attempt to query another organizer's `event_id` from this endpoint and confirm it's rejected
 
@@ -258,8 +263,11 @@ Build the locked/unlocked join-link states with mock countdown data.
 
 ### 24 Online Event Join Screen — Real Logic
 **Logic:**
-- `online_join_url` only ever returned by the API to a request made by a user holding a valid (`issued`, unused) ticket for that event — enforced via a time-gated RLS policy comparing `now()` to `events.starts_at`, not just hidden client-side
-- Countdown displayed to the attendee is computed against the **server's** `starts_at`, not the client device clock, consistent with the reservation-hold and "Live" status rules
+- Store organizer URLs in a private, non-client-readable schema; backfill existing values and remove the public `events.online_join_url` column
+- Collect a separate HTTPS join URL in online-event setup; drafts may omit it, but publication requires a valid URL
+- Return a URL only through an authenticated RPC after verifying the signed-in user owns an issued ticket linked to a paid order for the published online event
+- Keep the URL null in the RPC response until database time reaches `starts_at - 30 minutes`; the attendee countdown is derived from the returned database timestamps
+- Link the ticket-specific join route from issued online tickets in My Tickets; do not reveal URLs for invalid tickets, locked access, or missing links
 
 ---
 

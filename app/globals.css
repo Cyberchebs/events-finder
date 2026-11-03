@@ -37,6 +37,8 @@
   --color-tier-b-2: #065c4c;
   --color-tier-c-1: #e2603a;
   --color-tier-c-2: #96341a;
+  --color-ticket-black: #000000;
+  --color-ticket-white: #ffffff;
 
   --radius-sm: 8px;
   --radius-md: 10px;
@@ -45,36 +47,50 @@
   --radius-full: 9999px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-background: #0c0b12;
-    --color-surface: #16151e;
-    --color-surface-2: #1c1b26;
-    --color-sunken: #100f18;
+.ticket-card-stage {
+  perspective: 1000px;
+  touch-action: pan-y;
+  filter: drop-shadow(0 14px 18px color-mix(in srgb, var(--color-ink) 18%, transparent));
+}
 
-    --color-border: #282633;
-    --color-line-2: #3a3747;
+.ticket-card-face {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-ticket-white) 25%, transparent);
+  border-radius: 16px;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
 
-    --color-ink: #f2f1f6;
-    --color-ink-2: #a9a5b8;
-    --color-ink-3: #77738a;
+.ticket-card-face--torn {
+  clip-path: polygon(
+    0 0, 100% 0, 100% 28%, 96% 32%, 100% 36%, 100% 46%,
+    96% 50%, 100% 54%, 100% 64%, 96% 68%, 100% 72%, 100% 100%,
+    0 100%, 0 72%, 4% 68%, 0 64%, 0 54%, 4% 50%, 0 46%,
+    0 36%, 4% 32%, 0 28%
+  );
+}
 
-    --color-brand: #8b74ff;
-    --color-brand-ink: #12101c;
-    --color-brand-soft: #231c4a;
-    --color-brand-line: #3e3277;
+.ticket-card-metallic::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 18%,
+    color-mix(in srgb, var(--color-ticket-white) 48%, transparent) 43%,
+    transparent 62%
+  );
+  content: "";
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
 
-    --color-live: #ff6b6b;
-    --color-live-soft: #3a1718;
-    --color-live-ink: #ffb3b3;
-
-    --color-ok: #3dd39e;
-    --color-ok-soft: #10322a;
-    --color-ok-ink: #8fe9cb;
-
-    --color-warn: #e8a33d;
-    --color-warn-soft: #38270f;
-  }
+.ticket-card-3d-ready .ticket-card-qr-overlay {
+  opacity: 0;
 }
 
 [data-theme="dark"] {

@@ -2,7 +2,7 @@
 
 ## About the Project
 
-Tik-Booth is a full stack event ticketing platform for Nigeria, expanding to the rest of Africa and then globally. Organizers create events — in-person or online — define ticket tiers, and design a custom card look (color and image) per tier. Attendees discover events, buy tickets through Paystack, and hold each ticket as a styled 3D card with the QR code rendered directly on its face. The platform takes a fixed 20.3% commission on every sale, split automatically at the point of payment.
+Tik-Booth is a full stack event ticketing platform for Nigeria, expanding to the rest of Africa and then globally. Organizers create events — in-person or online — define ticket tiers, and design a custom card look per tier: preset or custom color, optional image, solid or torn shape, normal or metallic finish, and black or white text. Attendees discover events, buy tickets through Paystack, and hold each ticket as a rotatable 3D card with the QR code rendered directly on its face. The platform takes a fixed 20.3% commission on every sale, split automatically at the point of payment.
 
 The entire purchase and check-in flow is built around one hard constraint: **inventory must never oversell, and a ticket must never be usable twice**, even under concurrent buyers or multiple gates scanning at once.
 
@@ -35,7 +35,7 @@ Buying and selling tickets informally — via bank transfer and a screenshot as 
 
 ## Navigation
 
-Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profile. Desktop: top navbar — Discover, My tickets, Dashboard (once an organizer), plus a single "Create event" CTA. Discover additionally gets a persistent left category sidebar on desktop; every other page follows the plain navbar-only pattern. The check-in scanner and door-staff landing screen have no navigation chrome at all — see `ui-rules.md`.
+Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profile. Desktop: top navbar — Discover, My tickets, Dashboard, a profile control for signed-in users, and a single "Create event" CTA. Discover uses the same horizontal category chips on mobile and desktop, with the desktop search and location controls sharing a row. Other pages follow the plain navbar-only pattern. The check-in scanner and door-staff landing screen have no navigation chrome at all — see `ui-rules.md`.
 
 ---
 
@@ -44,7 +44,7 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 ### Landing / Discover
 
 - Logged-out and logged-in users both land on Discover — there's no separate marketing homepage gate
-- Category chips (mobile, pinned under the search bar) or a sidebar (desktop), plus a location-aware search bar
+- Horizontal category chips (scrollable on mobile) beneath a location-aware search bar on both mobile and desktop
 - Each event card shows exactly one status: **Free**, a relative countdown ("In 4 days"), or **Live** with a pulsing indicator
 
 ### Onboarding
@@ -57,11 +57,12 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 ### Organizer Setup (5-step wizard)
 
 - Step 1 — Organizer profile (name, logo, bio)
-- Step 2 — Payout setup (Paystack subaccount — bank details + BVN verification)
+- Step 2 — Payout setup (Paystack subaccount — bank/account details are sent to Paystack for verification, BVN is not requested, and bank details are not stored)
 - Step 3 — First event (title, in-person/online, venue or join-link placeholder, start **and end** time, category, description, cover image)
-- Step 4 — Ticket tiers (name, price, quantity, per-tier card color/image)
+- Step 4 — Ticket tiers (name, price, quantity, per-tier card color/image, shape, finish, and black/white text)
 - Step 5 — Review & publish, showing a live preview of both the public event card and the attendee's actual ticket card
 - Every step saves independently and is resumable — an interrupted organizer picks back up where they left off, and an unpublished event sits as a visible draft rather than disappearing
+- After the first event is published, organizers can create new events using their saved profile and payout setup; dashboard draft actions resume the specific draft they select
 
 ### Buying a Ticket
 
@@ -72,7 +73,7 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 
 ### My Tickets
 
-- Every valid ticket renders as a 3D card carrying the organizer's chosen color/image for that tier, with the QR code on the card face
+- Every valid ticket renders as a rotatable 3D card carrying the organizer's chosen color/image, shape, finish, and black/white text for that tier, with the QR code on the card face
 - A used ticket drops to a flat, QR-less row — once scanned, there is nothing left on it worth displaying as scannable
 - No resale, no transfer, no refund exists anywhere in this flow — a ticket that goes unused is simply unused
 
@@ -86,7 +87,7 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 
 - Stats: tickets sold, net earnings (always shown after the 20.3% fee, never gross), page visitors, checkout conversion
 - A funnel chart: viewed → started checkout → paid, sourced from PostHog and queried server-side, scoped strictly to that organizer's own events
-- Events list, including visible drafts with a "Continue" action
+- Events list, including visible drafts with a "Continue" action linked to that specific draft
 - Per-event door-staff management and a per-gate check-in breakdown
 
 ### Online Events

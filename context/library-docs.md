@@ -71,7 +71,7 @@ export async function createClient() {
 ```
 
 ```typescript
-// utils/supabase/admin.ts — service role, NEVER imported outside webhook handlers and scheduled jobs
+// utils/supabase/admin.ts — service role, kept server-only
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 
@@ -87,7 +87,7 @@ Rules:
 
 - Browser client — Client Components, auth state, React Query mutations from the browser
 - Server client — Server Components, most API routes, Server Actions
-- **Admin client (service role) — only `app/api/webhooks/paystack/route.ts` and scheduled jobs.** It bypasses RLS entirely; never import it into anything reachable from a user request without a webhook signature already verified
+- **Admin client (service role) — only trusted server handlers.** It bypasses RLS entirely; user-facing use is limited to the free-ticket issuance RPC after `getUser()` and rate limiting. That RPC is executable only by `service_role` and receives the authenticated owner ID from the server. Door-staff scanning instead uses narrow security-definer RPCs that validate the gate hash and event on every scan. Never return the client or service credentials to the browser.
 - Always `await createClient()` in server context — it reads cookies asynchronously
 - Use `getUser()`, never `getSession()`, whenever the result needs to be trustworthy — `getSession()` reads the cookie without re-verifying against Supabase's server
 
@@ -130,6 +130,7 @@ Rules:
 - Always handle the `error` return — never assume success
 - Use `.single()` when expecting exactly one row
 - **Inventory mutations never go through a plain `.update()` call** — see the RPC pattern below
+- Ticket-wallet event details use `get_ticket_event_details`, an authenticated RPC that verifies a paid order for the caller and returns only display-safe event fields. Do not add a broad ticket-holder `events` SELECT policy: it could expose `online_join_url` before Phase 6's time-gated access is implemented.
 
 ### Inventory RPC — the one query pattern that is never a plain client call
 
@@ -195,25 +196,27 @@ Rules:
 ### Storage
 
 ```typescript
-// Upload ticket card image
+// Stage an onboarding image in the private bucket from the browser
 const { data, error } = await supabase.storage
-  .from("ticket-card-images")
-  .upload(`${organizerId}/${ticketTypeId}.jpg`, fileBuffer, {
-    contentType: "image/jpeg",
-    upsert: true,
+  .from("onboarding-image-uploads")
+  .upload(`${userId}/${crypto.randomUUID()}.jpg`, file, {
+    contentType: file.type,
+    upsert: false,
   });
 
-// Public URL
-const { data } = supabase.storage
-  .from("ticket-card-images")
-  .getPublicUrl(`${organizerId}/${ticketTypeId}.jpg`);
+// POST the staged path and an allowlisted purpose to /api/onboarding/images.
+// The authenticated route verifies ownership, optimizes with Sharp, writes the final
+// object, updates the profile/event/ticket-tier URL, and deletes the staged original.
 ```
 
 Rules:
 
-- Bucket-level policy enforces the `MAX_TICKET_CARD_IMAGE_MB` (50MB) limit server-side — never rely on client-side validation alone
-- Server-side resize/compress before the image is ever referenced on a live ticket card (see Phase 4 of the build plan) — the original upload is not what gets rendered
-- Always save the public URL back to `ticket_types.card_image_url` after upload
+- `onboarding-image-uploads` is private, owner-scoped, and accepts JPEG, PNG, or WebP up to 50MB. The final buckets are public-read and owner-scoped for writes.
+- Never rely on client validation alone. `/api/onboarding/images` independently checks the user, source path, target record ownership, draft status, actual image format, input byte size, and pixel limit.
+- Sharp rotates from image metadata, resizes to a maximum 1920px (1200px for ticket-card images), converts to WebP, and rejects optimized outputs over 10MB. Only the optimized output is referenced by `profiles.logo_url`, `events.image_url`, or `ticket_types.card_image_url`.
+- Final object paths are user-scoped and uniquely named: `${userId}/${uuid}.webp` for logos, `${userId}/${eventId}/${uuid}.webp` for event covers, and `${userId}/${ticketTypeId}/${uuid}.webp` for ticket cards.
+- The server removes staged originals after processing and removes replaced images after updating their references. Do not expose staging URLs or render original uploads.
+- Use `MAX_ONBOARDING_IMAGE_BYTES` from `lib/constants.ts` for the 50MB upload cap.
 
 ---
 
@@ -297,6 +300,8 @@ export async function createSubaccount(params: {
 }
 ```
 
+The browser submits the bank code and 10-digit account number only to the authenticated Server Action. The action verifies the account with Paystack and creates the split recipient through `PaymentProvider`; only the returned subaccount code is stored on `profiles`. Do not request BVN or persist bank/account details.
+
 Rules:
 
 - `percentage_charge` is always `COMMISSION_RATE` from `lib/constants.ts` (as a percentage, i.e. `20.3`) — never hardcoded a second time here
@@ -372,6 +377,19 @@ export interface PaymentProvider {
 
 ---
 
+## Upstash Rate Limiting
+
+Checkout initialization uses `@upstash/ratelimit` with `@upstash/redis` in `lib/rate-limit.ts`.
+
+Rules:
+
+- Use an authenticated Supabase user ID as the rate-limit key; never trust a client-supplied identifier.
+- Checkout start allows five attempts per user per rolling minute.
+- Missing Upstash configuration or an Upstash request failure is fail-closed and returns an unavailable response; do not bypass the limiter.
+- Keep Redis credentials server-only. Configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in the deployment environment.
+
+---
+
 ## PostHog
 
 Check first: Check `AGENTS.md` for an installed PostHog skill. If a PostHog MCP server is configured — use it.
@@ -385,10 +403,11 @@ import posthog from "posthog-js";
 posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
   api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
   capture_pageview: true,
-  autocapture: true,
+  autocapture: false,
+  capture_exceptions: true,
 });
 
-// Capture a client-side event
+// Capture only an approved product milestone after its operation succeeds
 posthog.capture("checkout_started", { event_id, ticket_type_id, quantity });
 ```
 
@@ -421,9 +440,36 @@ Rules:
 - Always `await posthogServer.shutdown()` at the end of any server function that captures an event — without it, buffered events can be dropped when the serverless function exits
 - `flushAt: 1` and `flushInterval: 0` are always set on the server client — batching defaults assume a long-lived process, which a Next.js route handler is not
 - Event names must exactly match the table in `code-standards.md` — do not invent new event names inline
+- Browser pageviews and exception capture remain enabled; click/form autocapture is disabled. Capture only approved, decision-useful custom milestones.
+- `checkout_started` is captured only after the checkout API returns a successful paid reservation with a Paystack authorization URL; failed attempts and free-ticket orders are not part of the paid funnel.
 - Call `posthog.identify(userId)` once, right after login, on the client
 - Call `posthog.reset()` on logout, on the client
 - `ticket_purchased` and `ticket_scanned` are **only ever** captured from the server client (webhook handler, check-in route) — never from the browser client, since those two events are the organizer dashboard's source of truth
+- Scanner pages suppress browser PostHog events so the bearer token in the gate URL is never captured in browser event properties.
+
+### Private Query API (Organizer Funnel)
+
+The organizer dashboard uses PostHog's private query endpoint to retrieve event-level funnel counts. Configure `POSTHOG_API_HOST` to the PostHog app/API host (not the ingestion host), `POSTHOG_PROJECT_ID`, and a server-only `POSTHOG_PERSONAL_API_KEY` with the `query:read` scope. Keep `POSTHOG_PROJECT_API_KEY` for server event capture; it is not the personal API key for private queries.
+
+The server constructs a HogQL query only from event UUIDs already returned by the organizer-scoped Supabase RPC, filters to those `properties.event_id` values and a 30-day window, and counts distinct `distinct_id` values for the three approved funnel events. Never accept event IDs or query text from the browser. If the private query configuration or request is unavailable, show an explicit analytics-unavailable state rather than sample figures.
+
+---
+
+## React Three Fiber + Three.js
+
+The ticket wallet and organizer previews use `@react-three/fiber` v9 with Three.js to render an actual extruded ticket mesh. R3F v9 is paired with this project's React 19 version. Import only from these installed packages; no Drei dependency is required.
+
+Rules:
+
+- Keep Canvas inside the client-only ticket renderer. Load it with `next/dynamic` and `{ ssr: false }` from a Client Component; Next.js does not allow this option in a Server Component.
+- Use a transparent Canvas with a bounded device-pixel ratio and `frameloop="demand"`. Mount it only while the card is near the viewport so a long ticket wallet does not retain one WebGL context per off-screen ticket.
+- Build the solid and torn silhouettes as real Three.js extruded geometry. Use `meshPhysicalMaterial` for the normal/metallic finishes; CSS perspective is reserved for the 2D fallback, not the primary ticket.
+- Resolve preset colors from the CSS design tokens. Only the already-validated organizer custom hex value may be passed as a literal color.
+- Keep uploaded artwork and the generated signed-token QR on front-facing mesh planes. The QR plane includes an opaque white backing; retain the accessible DOM QR as the visible fallback until its texture is ready.
+- Synchronize the DOM text overlay with the mesh rotation so text remains selectable and accessible. Keyboard arrows rotate the card and Home resets it; do not auto-rotate.
+- Keep the 2D face visible until WebGL and the QR texture are ready. `Canvas` fallback, an error boundary around renderer initialization, failed or unavailable WebGL, and context loss must leave a usable card face and scannable QR.
+- Canvas has no data access. Pass only display-ready color, image URL, QR data URL, text, and shape/finish props from the existing component tree.
+- Log texture-load failures with a component-specific prefix. An optional artwork failure must not hide the card or QR.
 
 ---
 
@@ -560,7 +606,7 @@ export async function validateDoorStaffToken(eventId: string, plaintextToken: st
 - The plaintext token appears in exactly one place: the response of `createDoorStaffAccess`, shown to the organizer once. If they lose the link, generate a new one and revoke the old — never attempt to "look up" or redisplay the original token
 - **Revocation must be checked on every single scan request**, not cached client-side for the session — an organizer revoking a gate mid-event needs that to take effect on the usher's very next tap, not after they reload the page
 - This token is scoped to exactly one `event_id`. It grants no access to any other event, any organizer data, or anything outside the scan endpoint
-- No Supabase Auth session, no cookie, no `auth.uid()` involved for the usher at all — RLS on `tickets`/`ticket_types` for the scan path is bypassed deliberately via a service-role-scoped RPC that itself re-validates the door-staff token as its first step, not via the anon/user-scoped client
+- The usher does not need a Supabase Auth account. The anon-capable `validate_door_staff_access` and `scan_door_staff_ticket` security-definer RPCs accept only the event ID and a token hash. Each RPC checks the hash and revocation state; the scan RPC performs the event-scoped atomic ticket transition. Do not use the service-role client for scanning.
 
 ### Camera / QR Decoding (Usher's Device)
 
@@ -582,7 +628,7 @@ const controls = await codeReader.decodeFromVideoDevice(
 ```
 
 **Rules:**
-- `@zxing/browser` decodes QR codes from the live camera feed entirely client-side — only the **decoded token string** is sent to `POST /api/checkin/scan`, never a photo or video frame
+- `@zxing/browser` decodes QR codes from the live camera feed entirely client-side — only the **decoded token string** is sent to `POST /api/checkin/scan` in the `qr_token` body field, never a photo or video frame. The event ID is also in the body; send the door-staff bearer token in `x-door-staff-token`.
 - Camera access requires HTTPS (or `localhost` in dev) — this is a browser platform requirement, not something the app configures
 - Stop the camera stream (`controls.stop()`) immediately after a successful decode, restart it only when the usher taps "Scan next" — a camera left running continuously drains the device battery fast over a multi-hour event
 

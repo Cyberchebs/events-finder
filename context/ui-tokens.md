@@ -34,7 +34,7 @@ className="bg-violet-600 text-gray-700"
 
 ## globals.css — Complete Token Definition
 
-Light values are the default (`:root`). Dark values apply automatically under the system's `prefers-color-scheme: dark`, and can be forced either way with `data-theme="light"` / `data-theme="dark"` on `<html>` for an in-app theme toggle.
+Light values are the default (`:root`) regardless of the device's system preference. Dark values apply only when the root `<html>` element has `data-theme="dark"`. The Profile appearance switch saves the choice in this browser; the root layout reads it before first paint. With no saved choice, the app uses light mode.
 
 ```css
 @import "tailwindcss";
@@ -86,6 +86,8 @@ Light values are the default (`:root`). Dark values apply automatically under th
   --color-tier-b-2: #065c4c;
   --color-tier-c-1: #e2603a;
   --color-tier-c-2: #96341a;
+  --color-ticket-black: #000000;
+  --color-ticket-white: #ffffff;
 
   /* Border radius */
   --radius-sm: 8px;
@@ -95,40 +97,7 @@ Light values are the default (`:root`). Dark values apply automatically under th
   --radius-full: 9999px;
 }
 
-/* Dark mode — mirrors the system setting by default */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-background: #0c0b12;
-    --color-surface: #16151e;
-    --color-surface-2: #1c1b26;
-    --color-sunken: #100f18;
-
-    --color-border: #282633;
-    --color-line-2: #3a3747;
-
-    --color-ink: #f2f1f6;
-    --color-ink-2: #a9a5b8;
-    --color-ink-3: #77738a;
-
-    --color-brand: #8b74ff;
-    --color-brand-ink: #12101c;
-    --color-brand-soft: #231c4a;
-    --color-brand-line: #3e3277;
-
-    --color-live: #ff6b6b;
-    --color-live-soft: #3a1718;
-    --color-live-ink: #ffb3b3;
-
-    --color-ok: #3dd39e;
-    --color-ok-soft: #10322a;
-    --color-ok-ink: #8fe9cb;
-
-    --color-warn: #e8a33d;
-    --color-warn-soft: #38270f;
-  }
-}
-
-/* Forced dark, independent of system setting (in-app theme toggle) */
+/* Dark mode — applied only when selected in the Profile settings */
 [data-theme="dark"] {
   --color-background: #0c0b12;
   --color-surface: #16151e;
@@ -161,7 +130,7 @@ Tailwind v4 generates utility classes automatically from every `--color-*` token
 - `bg-ok-soft`, `text-ink-3`
 - etc.
 
-The tier-swatch tokens (`tier-a-1` etc.) are the exception to "never hardcode" — a ticket's actual card color/image is organizer-supplied data from `ticket_types.card_color`, not a fixed token, and is applied via an inline `style` with a value read from the database. The tokens exist only to seed the default swatch options in `TierDesignerStep`.
+The tier-swatch tokens (`tier-a-1` etc.) are the exception to "never hardcode" — a ticket's actual card color/image is organizer-supplied data from `ticket_types.card_color`, not a fixed token, and is applied via an inline `style` with a validated value from the database. The tokens seed the default swatches in `TierDesignerStep`; `ticket-black` and `ticket-white` guarantee the organizer's selected text color and QR surface remain fixed in either theme.
 
 ---
 
@@ -298,6 +267,10 @@ Dark mode swaps the shadow to `0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.
 border-radius: 16px (rounded-2xl)
 box-shadow: 0 18px 48px rgba(20,18,32,.16)   /* the one component allowed this much shadow */
 background: organizer-supplied gradient/image — never a fixed token
+shape: organizer selects a solid extruded 3D face or a notched torn-ticket mesh
+finish: normal or metallic physical material; both can be rotated interactively
+text: organizer selects black or white; QR remains black on opaque white
+fallback: matching 2D card face remains visible when WebGL is unavailable
 ```
 
 ### Buttons

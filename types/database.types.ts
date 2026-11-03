@@ -16,7 +16,7 @@ export type Database = {
           organizer_name: string | null;
           organizer_bio: string | null;
           logo_url: string | null;
-          onboarding_step: number;
+          onboarding_step: number | null;
           paystack_subaccount_code: string | null;
           created_at: string;
           updated_at: string;
@@ -27,7 +27,7 @@ export type Database = {
           organizer_name?: string | null;
           organizer_bio?: string | null;
           logo_url?: string | null;
-          onboarding_step?: number;
+          onboarding_step?: number | null;
           paystack_subaccount_code?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -38,7 +38,7 @@ export type Database = {
           organizer_name?: string | null;
           organizer_bio?: string | null;
           logo_url?: string | null;
-          onboarding_step?: number;
+          onboarding_step?: number | null;
           paystack_subaccount_code?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -53,9 +53,9 @@ export type Database = {
           description: string | null;
           image_url: string | null;
           category: string;
+          city: string | null;
           format: "in_person" | "online";
           venue_address: string | null;
-          online_join_url: string | null;
           starts_at: string;
           ends_at: string;
           status: "draft" | "published";
@@ -70,9 +70,9 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           category: string;
+          city?: string | null;
           format: "in_person" | "online";
           venue_address?: string | null;
-          online_join_url?: string | null;
           starts_at: string;
           ends_at: string;
           status?: "draft" | "published";
@@ -87,9 +87,9 @@ export type Database = {
           description?: string | null;
           image_url?: string | null;
           category?: string;
+          city?: string | null;
           format?: "in_person" | "online";
           venue_address?: string | null;
-          online_join_url?: string | null;
           starts_at?: string;
           ends_at?: string;
           status?: "draft" | "published";
@@ -117,6 +117,9 @@ export type Database = {
           quantity_sold: number;
           card_color: string | null;
           card_image_url: string | null;
+          card_style: string;
+          card_finish: string;
+          card_text_color: string;
           created_at: string;
           updated_at: string;
         };
@@ -129,6 +132,9 @@ export type Database = {
           quantity_sold?: number;
           card_color?: string | null;
           card_image_url?: string | null;
+          card_style?: string;
+          card_finish?: string;
+          card_text_color?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -141,6 +147,9 @@ export type Database = {
           quantity_sold?: number;
           card_color?: string | null;
           card_image_url?: string | null;
+          card_style?: string;
+          card_finish?: string;
+          card_text_color?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -162,6 +171,10 @@ export type Database = {
           user_id: string;
           expires_at: string;
           status: "pending" | "confirmed" | "expired";
+          idempotency_key: string | null;
+          total_kobo: number;
+          payment_status: "pending" | "failed" | "success";
+          paystack_authorization_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -172,6 +185,10 @@ export type Database = {
           user_id: string;
           expires_at: string;
           status?: "pending" | "confirmed" | "expired";
+          idempotency_key?: string | null;
+          total_kobo: number;
+          payment_status?: "pending" | "failed" | "success";
+          paystack_authorization_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -182,6 +199,10 @@ export type Database = {
           user_id?: string;
           expires_at?: string;
           status?: "pending" | "confirmed" | "expired";
+          idempotency_key?: string | null;
+          total_kobo?: number;
+          payment_status?: "pending" | "failed" | "success";
+          paystack_authorization_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -351,7 +372,114 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_organizer_dashboard_summary: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_organizer_event_dashboard: {
+        Args: { p_event_id: string };
+        Returns: Json;
+      };
+      get_door_staff_scan_context: {
+        Args: { p_event_id: string; p_token_hash: string };
+        Returns: Json;
+      };
+      validate_door_staff_access: {
+        Args: { p_event_id: string; p_token_hash: string };
+        Returns: Json;
+      };
+      get_ticket_event_details: {
+        Args: { p_event_ids: string[] };
+        Returns: {
+          id: string;
+          title: string;
+          starts_at: string;
+          ends_at: string;
+          format: Database["public"]["Enums"]["event_format"];
+          city: string | null;
+          venue_address: string | null;
+        }[];
+      };
+      get_event_paystack_subaccount: {
+        Args: { p_event_id: string };
+        Returns: string | null;
+      };
+      reserve_ticket_inventory: {
+        Args: {
+          p_ticket_type_id: string;
+          p_quantity: number;
+          p_idempotency_key: string;
+        };
+        Returns: Json;
+      };
+      save_reservation_authorization_url: {
+        Args: {
+          p_reservation_id: string;
+          p_authorization_url: string;
+        };
+        Returns: boolean;
+      };
+      issue_free_ticket_order: {
+        Args: {
+          p_ticket_type_id: string;
+          p_quantity: number;
+          p_idempotency_key: string;
+          p_user_id: string;
+          p_ticket_payloads: Json;
+        };
+        Returns: Json;
+      };
+      release_expired_reservation: {
+        Args: { p_reservation_id: string };
+        Returns: boolean;
+      };
+      mark_payment_failed: {
+        Args: { p_event_id: string; p_reservation_id: string | null };
+        Returns: Json;
+      };
+      process_paid_reservation: {
+        Args: {
+          p_event_id: string;
+          p_reservation_id: string;
+          p_amount_kobo: number;
+          p_commission_kobo: number;
+          p_ticket_payloads: Json;
+        };
+        Returns: Json;
+      };
+      save_onboarding_ticket_tiers: {
+        Args: { p_event_id: string; p_tiers: Json };
+        Returns: { tier_id: string; position: number }[];
+      };
+      scan_door_staff_ticket: {
+        Args: { p_event_id: string; p_token_hash: string; p_ticket_id: string };
+        Returns: Json;
+      };
+      publish_onboarding_event: {
+        Args: { p_event_id: string };
+        Returns: undefined;
+      };
+      save_draft_online_event_join_url: {
+        Args: { p_event_id: string; p_join_url: string | null };
+        Returns: boolean;
+      };
+      get_draft_online_event_join_url: {
+        Args: { p_event_id: string };
+        Returns: string | null;
+      };
+      get_online_event_join_access: {
+        Args: { p_ticket_id: string };
+        Returns: {
+          event_title: string;
+          starts_at: string;
+          unlock_at: string;
+          server_now: string;
+          is_unlocked: boolean;
+          join_url: string | null;
+        }[];
+      };
+    };
     Enums: {
       event_format: "in_person" | "online";
       event_status: "draft" | "published";

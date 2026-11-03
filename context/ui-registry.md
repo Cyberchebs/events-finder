@@ -20,64 +20,177 @@ After building any component — update this file with the component name, file 
 
 ### DiscoverPage
 
-File: app/page.tsx
-Last updated: 2026-10-03
+File: components/discover/DiscoverPageClient.tsx (server data bootstrap: app/page.tsx)
+Last updated: 2026-11-03
 
-| Property         | Class                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------|
-| Page shell       | `min-h-screen bg-background px-6 pb-12 pt-8`                                                          |
-| Header badge     | `h-6 w-6 rounded-[7px] bg-brand text-[10px] font-extrabold text-brand-ink`                            |
-| Page title       | `text-[20px] font-extrabold tracking-[-0.04em] text-ink`                                              |
-| Description      | `max-w-[990px] text-[12.5px] font-medium leading-6 text-ink-2`                                       |
-| Phone shell      | `max-w-[360px] rounded-[20px] border border-border bg-surface-2 p-2.5`                                |
-| Search row       | `flex items-center gap-2 rounded-full border border-border bg-surface-2 px-3 py-2.5`                  |
-| Chip state       | Active: `bg-brand text-brand-ink`; inactive: `border border-border bg-surface text-ink-2`             |
-| Status badge     | Live: `bg-live-soft text-live-ink` with pulsing `bg-live`, Free: `bg-ok-soft text-ok-ink`               |
-| Event card       | `overflow-hidden rounded-[16px] border border-border bg-surface`                                       |
-| Empty state      | `flex min-h-[330px] flex-col items-center justify-center` with neutral `bg-sunken` icon orb             |
+| Property           | Class                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Page shell         | `flex min-h-screen flex-col bg-background text-ink`                                                        |
+| Content shell      | `mx-auto w-full max-w-[1240px] flex-1 px-4 py-5 pb-24 sm:px-6 md:py-8 md:pb-12`                           |
+| Page title         | `text-[22px] font-extrabold tracking-tight text-ink md:text-[24px]`                                        |
+| Search and filters | `DiscoverSearchBar` with horizontal `CategoryChips` on mobile and desktop                                 |
+| Results grid       | `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3`                                                     |
+| Loading/error      | Centered muted status text; retry action uses `border-line-2 bg-surface`                                  |
+| Empty state        | Existing `EmptyState` pattern with city-aware reset                                                       |
 
 **Pattern notes:**
-The page intentionally mirrors the published Discover screen set: three mobile-card states on a single screen, with a populated list, a filtered results list, and an empty-state version. The layout stays fully token-based and avoids raw color values outside the project theme.
+The page uses a welcoming responsive heading, a location-aware search field, and the same horizontal category chips at every breakpoint. Mobile keeps the fixed bottom tab bar. Event cards, results, retry, and empty states remain token-based. Event feed data is fetched server-first and refreshed through React Query.
 
 ### LoginPage
 
 File: app/login/LoginForm.tsx
-Last updated: 2026-10-09
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                   |
 | ---------------- | --------------------------------------------------------------------------------------------------------|
-| Shell            | `min-h-screen bg-background px-4 py-10`                                                                 |
-| Card             | `rounded-[24px] border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(20,18,32,0.06),0_8px_24px_rgba(20,18,32,0.06)]` |
-| Brand block      | `h-10 w-10 rounded-[12px] bg-brand text-lg font-extrabold text-brand-ink`                           |
-| Heading          | `text-[24px] font-extrabold tracking-[-0.04em] text-ink`                                             |
-| Secondary text   | `text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-3`                                 |
-| Divider          | `h-px flex-1 bg-border`                                                                                |
-| Input state      | `border border-border bg-surface-2 px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-line`     |
-| Primary action   | `bg-brand px-4 py-3 text-brand-ink`                                                                    |
-| Supporting note  | `bg-brand-soft px-3 py-2 text-ink-2`                                                                   |
+| Shell            | `min-h-screen items-center bg-background px-4 py-8 sm:px-6`                                              |
+| Layout           | `max-w-[1080px] md:grid-cols-[minmax(0,1fr)_440px]`                                                      |
+| Card             | `rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-7`                                       |
+| Heading          | `text-[23px] font-extrabold tracking-tight text-ink`                                                     |
+| Input state      | `border border-border bg-surface-2 px-3 py-2.5 focus-within:ring-2 focus-within:ring-brand-line`        |
+| Primary action   | `bg-brand px-4 py-3 text-brand-ink`                                                                     |
+| Supporting note  | `bg-brand-soft px-3 py-2 text-ink-2`                                                                    |
 
 **Pattern notes:**
-The login screen follows the same token system as the rest of the product and keeps the single-account messaging explicit. It uses the same brand purple, neutral border, and soft support panel patterns used elsewhere instead of introducing new color logic.
+Desktop pairs the email/Google auth card with an editorial introduction; mobile keeps the auth card full width with a compact brand mark. The single-account organizer messaging and all existing authentication behavior remain in the form.
+
+### ProfilePage
+
+File: app/profile/page.tsx
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| Background       | Page `bg-background`; account and settings panels `bg-surface`                            |
+| Border           | `border border-border`; row separators `border-b border-border`                           |
+| Border radius    | Panels `rounded-2xl`; icon containers `rounded-lg` / `rounded-full`                        |
+| Text — primary   | `text-[24px] font-extrabold tracking-tight text-ink`                                      |
+| Text — secondary | `text-[12px] font-medium text-ink-2`; captions `text-[10px] font-medium text-ink-3`       |
+| Spacing          | Main content `px-4 py-6 pb-24`; panels `p-5`; rows `py-4`                                  |
+| Hover state      | Settings rows `hover:text-brand`; organizer action `hover:bg-surface-2`                   |
+| Accent usage     | Account type and avatar use `bg-brand-soft text-brand`; logout uses `text-live`           |
+| Appearance       | `ProfileThemeToggle` uses a token-colored `role="switch"` control and Sun/Moon icons; selection persists in browser storage |
+
+**Pattern notes:**
+The account surface reads only the signed-in user's profile. The settings list links to existing ticket and organizer routes and exposes the working sign-out action; it does not invent edit, interests, or security settings that the app does not support. Attendees get the organizer onboarding action; existing organizers get a dashboard action. Account data remains server-loaded and errors are surfaced.
+The appearance switch controls app-wide light/dark tokens. Light is the default when no browser preference exists, and the saved preference is applied before first paint.
 
 ### EventCard
 
 File: components/discover/EventCard.tsx
-Last updated: 2026-09-20
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                   |
 | ---------------- | --------------------------------------------------------------------------------------------------------|
-| Background       | `bg-surface` card shell, cover image div sits above with no padding                                     |
+| Background       | `bg-surface` card shell; category gradient behind the cover image                                       |
 | Border           | `border border-border`                                                                                  |
 | Border radius    | `rounded-2xl` outer card, `rounded-full` on the status badge                                            |
-| Text — primary   | `text-sm font-semibold leading-5 text-ink` title                                                        |
-| Text — secondary | `text-xs font-semibold text-ink-3` date/venue line                                                      |
-| Spacing          | Cover `h-26 w-full`, body `p-3`                                                                          |
-| Hover state      | `hover:border-line-2` on the whole card, no lift/shadow change                                          |
-| Shadow           | `none` at rest                                                                                           |
-| Accent usage     | Status badge only — see `StatusBadge` below. The card itself never carries brand color.                 |
+| Text — primary   | `text-[16px] font-extrabold leading-5 text-ink` title                                                   |
+| Text — secondary | `text-[11px] font-semibold text-ink-3` date/location; price uses `text-[12px] font-extrabold text-ink` |
+| Spacing          | Cover `h-40 w-full sm:h-44`, body `p-4`                                                                 |
+| Hover state      | `hover:border-line-2`; title transitions to `text-brand`                                                |
+| Shadow           | `shadow-sm`                                                                                            |
+| Accent usage     | Date/countdown and event action use `text-brand`; status uses shared `StatusBadge`                      |
 
 **Pattern notes:**
-Cover image is a flat `bg-gradient-to-br` tile keyed off the event's category or organizer-chosen tone — never a photo placeholder gray box, since a colored tile reads as "designed" even before an organizer uploads a real cover. Exactly one `StatusBadge` renders top-left on the cover, never two badges stacked. Clicking anywhere on the card navigates to the event detail page.
+Cover uses a category-keyed `bg-gradient-to-br` tile beneath the optional event image, never a gray placeholder. Exactly one `StatusBadge` renders top-left on the cover. The footer shows the lowest available tier price and links to `/e/[event_id]`.
+
+### EventDetail
+
+File: components/events/EventDetail.tsx
+Last updated: 2026-10-17
+
+| Property         | Class                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------|
+| Page shell       | `flex min-h-screen flex-col bg-background`                                                              |
+| Main panel       | `overflow-hidden rounded-2xl border border-border bg-surface`                                           |
+| Cover            | Category-keyed gradient with the optional cover image                                                   |
+| Heading          | `text-[24px] font-extrabold leading-tight tracking-[-0.03em] text-ink`                                  |
+| Supporting text  | `text-[12.5px] font-semibold leading-5 text-ink-2`; metadata uses `text-ink-3`                          |
+| Ticket panel     | `rounded-xl border border-border bg-surface-2 p-4`; rows use the `TicketTierSelector` pattern           |
+| Spacing          | Main content `gap-7 p-4 md:p-7`; sections separated with `border-t border-border`                       |
+| Primary action   | `bg-brand text-brand-ink`; enabled after selecting an available tier                                     |
+| Shadow           | `none`                                                                                                   |
+
+**Pattern notes:**
+The detail route shares the event card's category gradient, status badge, and token-based surface/border system. Ticket tiers are selectable through `TicketTierSelector`; its CTA passes the selected tier into Checkout. Sold-out and ended events remain unavailable.
+
+### TicketTierSelector
+
+File: components/events/TicketTierSelector.tsx
+Last updated: 2026-10-17
+
+| Property         | Class                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------|
+| Background       | `bg-surface` unselected, `bg-brand-soft` selected                                                  |
+| Border           | `border border-border` unselected, `border-brand` selected                                         |
+| Border radius    | `rounded-lg`                                                                                        |
+| Text — primary   | `text-[12px] font-bold text-ink` tier name; `text-[12px] font-extrabold text-ink` price            |
+| Text — secondary | `text-[10.5px] font-semibold text-ink-3` availability                                               |
+| Spacing          | `px-3 py-3`; rows `space-y-2.5`; CTA `mt-4 h-11`                                                    |
+| Hover state      | `hover:border-line-2` on available, unselected tiers                                               |
+| Shadow           | `none`                                                                                             |
+| Accent usage     | Selected row uses `bg-brand-soft border-brand`; sold-out state stays neutral                       |
+
+**Pattern notes:**
+Rows use an accessible radio-group interaction and the CTA stays unavailable until a tier is selected. The checkout URL carries the tier ID and initial quantity so the selection survives navigation and sign-in.
+
+### CheckoutForm
+
+File: components/checkout/CheckoutForm.tsx
+Last updated: 2026-10-17
+
+| Property         | Class                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------|
+| Background       | `bg-surface` panels; `bg-sunken` missing-selection notice                                            |
+| Border           | `border border-border`; section dividers use `border-t border-border`                                |
+| Border radius    | `rounded-2xl` panels, `rounded-xl` notice, `rounded-md` quantity controls                            |
+| Text — primary   | `text-ink`; page heading `text-[22px] font-extrabold`; total `text-[15px] font-extrabold`            |
+| Text — secondary | `text-ink-2` event detail; `text-ink-3` labels and availability                                      |
+| Spacing          | Grid `gap-5`; panels `p-4 md:p-6`; tier section `mt-6`; summary `p-4 md:p-5`                           |
+| Hover state      | Primary action `hover:opacity-95`; quantity controls disabled at their limits                        |
+| Shadow           | `none`                                                                                              |
+| Accent usage     | Primary action uses `bg-brand text-brand-ink`; low inventory uses `text-warn`                        |
+
+**Pattern notes:**
+The checkout summary is derived from the selected tier’s integer-kobo price and current quantity. Quantity is limited to available inventory and the shared `MAX_TICKETS_PER_ORDER` constant. The server-provided timestamp determines whether the event has ended.
+
+### CheckoutStatus
+
+File: components/checkout/CheckoutStatus.tsx
+Last updated: 2026-10-17
+
+| Property         | Class                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| Background       | `bg-surface`; state icon uses `text-brand`, `text-ok`, or neutral `text-ink-3`                           |
+| Border           | `border border-border`; no state-specific border color                                                 |
+| Border radius    | `rounded-2xl`                                                                                          |
+| Text — primary   | `text-[22px] font-extrabold text-ink`                                                                   |
+| Text — secondary | `text-[13px] font-medium leading-6 text-ink-2`; reference and error notices use `text-ink-3` / `text-ink-2` |
+| Spacing          | `mx-auto max-w-[560px] p-6 sm:p-8`; status updates poll every 2.5 seconds                               |
+| Shadow           | `none`                                                                                                 |
+| Accent usage     | State is communicated by the icon and copy; only tickets confirmed by the server advance to the wallet |
+
+**Pattern notes:**
+The browser return is never treated as proof of payment. This screen polls the owner-scoped server status endpoint and only navigates to My Tickets after the reservation and paid order are confirmed in the database. The hold countdown starts from a server-provided timestamp.
+
+### MyTicketsPage
+
+File: app/my-tickets/page.tsx
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------- |
+| Page shell       | `flex min-h-screen flex-col bg-background`                                                              |
+| Content shell    | `mx-auto w-full max-w-[1000px] flex-1 px-4 py-5 pb-24 sm:px-6 md:py-8 md:pb-12`                         |
+| Card layout      | `grid gap-4 lg:grid-cols-2`                                                                            |
+| Empty state      | `min-h-[420px]` centered `rounded-2xl border border-border bg-surface` panel with `bg-sunken` icon orb |
+| Primary action   | `bg-brand text-brand-ink`; "Find an event" returns to Discover                                         |
+| Navigation       | Desktop navbar uses `/my-tickets`; mobile bottom tab selects `tickets`                                 |
+
+**Pattern notes:**
+Ticket, order, and tier reads are scoped to the signed-in owner. Event display details come from an owner-checked RPC that returns only safe fields, never the private online join URL. Missing related event/tier data is surfaced as an error instead of silently hiding an issued ticket.
+The empty wallet uses a centered encouragement panel with one clear discovery action; issued and past-ticket sections retain their separate groupings.
 
 ### StatusBadge
 
@@ -98,43 +211,43 @@ Last updated: 2026-09-20
 **Pattern notes:**
 Exactly one variant renders per card: `live` (pulsing dot + "LIVE"), `free` ("FREE"), a plain countdown string (no badge chrome, just `text-brand text-xs font-extrabold`), or `sold-out`. Never combine — an event is never shown as both "Free" and counting down; the countdown string in that case is simply omitted since the badge already communicates status. The Live variant is computed from server time on every render, never from a client-side `Date.now()` cached at page load.
 
-### DiscoverSearchBar (mobile)
+### DiscoverSearchBar
 
 File: components/discover/DiscoverSearchBar.tsx
-Last updated: 2026-09-20
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                    |
 | ---------------- | ---------------------------------------------------------------------------------------------------------|
 | Background       | `bg-surface-2`                                                                                            |
 | Border           | `border border-border`                                                                                   |
-| Border radius    | `rounded-full`                                                                                            |
-| Text — primary   | `text-[13px] font-medium text-ink-3` placeholder, `text-ink font-bold` on the location chip when set     |
-| Spacing          | `h-10 px-3 gap-2`, divider `w-px h-4 bg-border`                                                          |
-| Hover state      | `none` — tapping opens the search/location sheet, no inline hover                                        |
+| Border radius    | `rounded-xl` mobile search, `rounded-lg` desktop input and city selector                                  |
+| Text — primary   | `text-[13px] font-medium text-ink`; placeholder `text-ink-3`                                             |
+| Spacing          | Mobile city row plus `h-10 px-3 gap-2` search field; desktop controls in one row                          |
+| Hover state      | City selector `hover:text-ink` / `hover:border-line-2`                                                   |
 | Shadow           | `none`                                                                                                    |
-| Accent usage     | `none` — search stays neutral so category chips carry the only color                                     |
+| Accent usage     | Search remains neutral; location pin uses `text-brand`                                                   |
 
 **Pattern notes:**
-Single row combining a search field and a location chip separated by a vertical divider, matching the YouTube-style pattern the product spec calls for. Location chip always shows a resolved city name, never a raw "Set location" placeholder once one has been chosen — falls back to "Set location" only pre-first-use.
+Mobile presents the city picker above a full-width search field. Desktop places the search and separate city picker side by side. Both retain manual city selection and outside-click dismissal.
 
-### CategoryChips (mobile) / CategorySidebar (desktop)
+### CategoryChips
 
-File: components/discover/CategoryChips.tsx, components/discover/CategorySidebar.tsx
-Last updated: 2026-09-20
+File: components/discover/CategoryChips.tsx
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
-| Background       | Chip off-state `bg-surface`; chip on-state `bg-brand`; sidebar row on-state `bg-brand-soft`               |
-| Border           | Chip off-state `border border-border`; chip on-state `border-brand`; sidebar has no per-row border         |
-| Border radius    | Chips `rounded-full`; sidebar active row gets `border-r-2 border-brand` instead of radius                  |
-| Text — primary   | Chip off `text-ink-2 font-bold text-xs`; chip on `text-brand-ink`; sidebar active `text-brand font-bold`   |
-| Spacing          | Chips `px-3.5 py-1.5 gap-1.5`, row `flex gap-1.5 overflow-x-auto px-4 pb-3`; sidebar rows `px-4.5 py-2.5`  |
-| Hover state       | `hover:border-line-2` on off-state chips; `hover:bg-surface-2` on inactive sidebar rows                    |
+| Background       | Chip off-state `bg-surface`; chip on-state `bg-brand-soft`                                                |
+| Border           | Chip off-state `border border-border`; chip on-state `border-brand-line`                                  |
+| Border radius    | `rounded-full`                                                                                            |
+| Text — primary   | Chip off `text-ink-2 font-bold text-xs`; chip on `text-brand`                                             |
+| Spacing          | `px-3.5 py-1.5`; row `flex gap-2 overflow-x-auto py-1`                                                    |
+| Hover state       | `hover:border-line-2` on off-state chips                                                                  |
 | Shadow           | `none`                                                                                                     |
-| Accent usage     | Active state is the only accent use in the entire Discover filter row — everything else stays neutral      |
+| Accent usage     | Active state uses the soft brand background and brand text                                                |
 
 **Pattern notes:**
-Mobile renders `CategoryChips` directly beneath `DiscoverSearchBar`, pinned, horizontally scrollable, never wrapping to a second line. Desktop renders `CategorySidebar` as a persistent left column (`w-44 border-r border-border`) instead — the same category list, never both patterns on the same breakpoint. "All" is always the first entry in both.
+The same horizontally scrollable category chip row appears directly below search on mobile and desktop. "All" is always first. The legacy `CategorySidebar` remains available but is not used by the live Discover page.
 
 ### TierSelector
 
@@ -173,31 +286,32 @@ Last updated: 2026-09-20
 | Accent usage     | Background swap from brand-soft to live-soft is the only accent signal — no separate warning icon swap    |
 
 **Pattern notes:**
-The countdown value is never computed from a `setInterval` counting down from a client-captured start time — it re-derives from the server-provided `expires_at` on every tick, so a backgrounded tab that resumes doesn't show a stale or negative value. This same component (re-skinned, not re-built) powers the online-event unlock countdown — do not create a second countdown component for that screen.
+The checkout countdown re-derives from the server-provided `expires_at` on every tick. Online join access follows the same server-timestamp basis with `starts_at - 30 minutes`, while keeping the route-specific refresh behavior in `OnlineJoinAccess`.
 
-### TicketCard (wallet card)
+### TicketCard (wallet card and shared 3D face)
 
-File: components/tickets/TicketCard.tsx
-Last updated: 2026-09-20
+Files: `components/tickets/TicketCard.tsx`, `components/tickets/TicketCardFace.tsx`, `components/tickets/TicketCardObject.tsx`
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
-| Background       | `bg-gradient-to-br` using the ticket type's stored `card_color` (or `card_image_url` as a cover layer)     |
-| Border           | `none` — the gradient edge is the only boundary                                                            |
-| Border radius    | `rounded-2xl`                                                                                              |
-| Text — primary   | `text-white font-extrabold text-[15px]` event title, `text-white/85 font-semibold text-[11.5px]` date/tier |
-| Spacing          | `p-4 flex flex-col gap-3`, QR block `self-center`                                                          |
-| Hover state      | `none` on mobile; desktop wallet view may apply a `hover:-translate-y-0.5 transition-transform`            |
-| Shadow           | `shadow-lg` — this is the one component allowed a heavier shadow, since it's meant to look liftable/physical |
-| Accent usage     | The organizer's own tier color **is** the accent for this component — never overridden by the app's brand color |
+| Background       | Organizer-selected token/custom color rendered on the 3D mesh with optional face artwork; QR surface `bg-ticket-white` |
+| Border           | Face `border border-ticket-white/25`; selected order uses `ring-2 ring-brand-line`                         |
+| Border radius    | Solid mesh has rounded corners; torn mesh has actual notches; 2D fallback uses `.ticket-card-face--torn` |
+| Text — primary   | `text-[18px] font-extrabold leading-6`; organizer selects `text-ticket-black` or `text-ticket-white`       |
+| Text — secondary | `text-[10px] font-semibold`; uses selected black/white face color with reduced opacity                      |
+| Spacing          | Face `p-4`; QR DOM fallback `h-[92px] w-[92px] sm:h-[104px] sm:w-[104px]`                                  |
+| Hover state      | Pointer movement, touch drag, or focused arrow keys rotate the R3F mesh; Home resets it                    |
+| Shadow           | Ticket stage uses a token-derived drop shadow; this is the one component allowed elevated depth             |
+| Accent usage     | `meshPhysicalMaterial` normal/metallic finish; QR is a mesh texture over opaque white and an accessible DOM fallback |
 
 **Pattern notes:**
-QR is always rendered as a white rounded square (`bg-white rounded-lg p-1.5`) regardless of the card's background color or image, for scan contrast. `used` tickets render through a separate flattened treatment (see `UsedTicketRow`), never this component with a dimmed opacity — a used ticket is a different component, not a CSS state of this one, because it drops the QR entirely.
+Issued tickets use an actual React Three Fiber extruded mesh, organizer-selected color, optional artwork, solid or notched geometry, normal or metallic physical material, and black or white text. The DOM text rotates in sync with the mesh so it remains accessible. The signed QR is a front-face texture with an opaque white backing; its accessible DOM image remains visible until WebGL and the QR texture are ready, and is the WebGL-unavailable fallback. Canvas is client-only, demand-rendered, and mounted only near the viewport. Used and void tickets render through the separate flattened `UsedTicketRow` treatment and never show a QR. Issued online tickets include a ticket-specific "Join online event" link; the development-only mock preview remains separate.
 
 ### UsedTicketRow
 
 File: components/tickets/UsedTicketRow.tsx
-Last updated: 2026-09-20
+Last updated: 2026-10-17
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
@@ -215,53 +329,171 @@ No QR code renders here at all — not a grayed-out one. A used ticket has nothi
 ### OnlineJoinLock
 
 File: components/events/OnlineJoinLock.tsx
-Last updated: 2026-09-20
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
-| Background       | `bg-sunken` full-bleed panel                                                                               |
+| Background       | `bg-sunken` full-bleed panel; icon orb `bg-surface` (locked/unavailable) / `bg-ok-soft` (unlocked)          |
 | Border           | `none`                                                                                                     |
 | Border radius    | `none` (fills its container)                                                                                |
 | Text — primary   | `text-[16.5px] font-extrabold` heading, countdown `text-[30px] font-extrabold tabular-nums`                |
-| Text — secondary | `text-[12.5px] font-medium text-ink-2 max-w-[230px] text-center`                                          |
+| Text — secondary | `text-[12.5px] font-medium text-ink-2 max-w-[280px] text-center`                                           |
 | Spacing          | `flex flex-col items-center justify-center gap-2 p-6`                                                      |
-| Accent usage     | `bg-sunken text-ink-3` lock icon orb when locked; swaps to `bg-ok-soft text-ok` "Join event" state once unlocked |
+| Hover state      | Actual join link uses `hover:opacity-95`                                                                   |
+| Shadow           | `none`                                                                                                    |
+| Accent usage     | `bg-surface text-ink-3` locked/unavailable icon orb; `bg-ok-soft text-ok` success state once unlocked        |
 
 **Pattern notes:**
-This component has exactly two states — locked and unlocked — and the join URL is simply absent from the API response in the locked state, so there is nothing in the client bundle to inspect or extract early. The countdown reuses the `ReservationCountdown` visual language but is its own component since the unlock condition (`starts_at` minus a fixed offset) differs from a reservation's `expires_at`.
+This component has locked, unlocked, and unavailable states and follows the established 30px tabular countdown scale. The development-only preview route uses mock state and never includes an organizer URL. The live URL appears only as an external anchor after the server RPC validates ticket ownership, paid order, issued status, and the unlock time.
+
+### OnlineJoinAccess
+
+File: components/events/OnlineJoinAccess.tsx
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------|
+| Background       | Delegates to `OnlineJoinLock` (`bg-sunken`)                                                               |
+| Border           | `none`                                                                                                    |
+| Border radius    | `none`                                                                                                    |
+| Text — primary   | Delegates to `OnlineJoinLock` (`text-[16.5px] font-extrabold`)                                            |
+| Text — secondary | Delegates to `OnlineJoinLock` (`text-[12.5px] font-medium text-ink-2`)                                    |
+| Spacing          | Delegates to `OnlineJoinLock` (`p-6`, `gap-2`)                                                            |
+| Hover state      | `none`                                                                                                    |
+| Shadow           | `none`                                                                                                    |
+| Accent usage     | Delegates to the locked, unavailable, and unlocked icon-orb states                                       |
+
+**Pattern notes:**
+This component adds no independent visual treatment. It derives the countdown from the RPC's database timestamps and refreshes access after the threshold; the join URL is passed through only when the RPC says access is unlocked.
+
+### EventDetailsStep — private online URL field
+
+File: components/onboarding/EventDetailsStep.tsx
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------|
+| Background       | `bg-surface-2`                                                                                            |
+| Border           | `border border-border`                                                                                    |
+| Border radius    | `rounded-lg`                                                                                              |
+| Text — primary   | `text-[12px] font-medium text-ink`                                                                        |
+| Text — secondary | `text-[10px] font-medium leading-4 text-ink-3`                                                            |
+| Spacing          | `h-10 px-3`; helper copy sits one spacing step below the field                                            |
+| Hover state      | `none`                                                                                                    |
+| Shadow           | `none`                                                                                                    |
+| Accent usage     | Focus ring uses `focus:ring-2 focus:ring-brand-line`                                                     |
+
+**Pattern notes:**
+The URL is a separate optional HTTPS field for drafts; publishing requires it for online events. Keep the platform/venue field unchanged and load the draft URL only through the organizer-scoped RPC.
 
 ### WizardShell
 
 File: components/onboarding/WizardShell.tsx
-Last updated: 2026-09-20
+Last updated: 2026-11-03
 
-| Property         | Class                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------|
-| Background       | `bg-surface`                                                                                               |
-| Border           | `border border-border`                                                                                    |
-| Border radius    | `rounded-2xl`                                                                                              |
-| Progress track   | `h-1.5 rounded-full bg-sunken` outer, `bg-brand rounded-full` fill, width set by `(step / 5) * 100%`       |
-| Step dots        | `h-7 w-7 rounded-full bg-sunken text-ink-3` pending; `bg-brand-soft border-2 border-brand-line text-brand` current; `bg-brand text-brand-ink` done |
-| Spacing          | `p-6`, dots row `grid grid-cols-5 gap-2 mb-5`                                                              |
-| Accent usage     | Progress fill and current/done dots are the only accent color on this shell — step content below inherits normal card styling |
+| Property         | Class                                                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------|
+| Background       | `bg-surface`                                                                                                                   |
+| Border           | `border border-border`                                                                                                         |
+| Border radius    | `rounded-2xl`                                                                                                                  |
+| Progress track   | `h-1 rounded-full bg-brand-soft` outer, `bg-brand rounded-full` fill, width set by `(step / 5) * 100%`                           |
+| Step indicators  | `h-8 w-8 rounded-full`; completed/current `bg-brand text-brand-ink`, pending `bg-sunken text-ink-3`                             |
+| Spacing          | Desktop two-column shell; stepper `p-4 md:p-5`; content panel `p-4 sm:p-5 md:p-6`                                               |
+| Accent usage     | Progress and active/completed step indicators use brand tokens; the step body stays surface-based                               |
 
 **Pattern notes:**
-`WizardShell` owns only the chrome (progress track, step dots, Back/Continue footer row) and renders `children` for the step body — it never contains step-specific fields itself. Each step's own component (`ProfileStep`, `PayoutStep`, `EventDetailsStep`, `TierDesignerStep`, `ReviewPublishStep`) is a sibling file, not nested inside this one. Back is disabled (not hidden) on step 1; Continue's label changes to "Publish event" only on step 5.
+`WizardShell` uses a vertical step list beside the current form on desktop and a compact horizontal step row on mobile. It links only to the current or previously reached steps; future steps remain non-interactive until the server confirms progress. Repeat-event flows reuse the same shell but skip profile/payout links and retain the selected draft ID in event-step navigation. Form navigation belongs to each step's `WizardStepFooter`, preventing users from bypassing required saves.
+
+### WizardStepFooter
+
+File: components/onboarding/WizardStepFooter.tsx
+Last updated: 2026-10-16
+
+| Property         | Class                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| Background       | Primary action `bg-brand`; secondary action `bg-surface`                                                |
+| Border           | Secondary action `border border-line-2`; separator `border-t border-border`                            |
+| Border radius    | `rounded-md`                                                                                            |
+| Text — primary   | `text-[12px] font-bold text-brand-ink`                                                                  |
+| Text — secondary | `text-[12px] font-bold text-ink`                                                                        |
+| Spacing          | `mt-6 flex min-h-11 justify-between gap-3 pt-4`; buttons `h-10 px-4` or `px-5`                            |
+| Hover state      | Primary `hover:opacity-90`; secondary `hover:bg-surface-2`                                               |
+| Shadow           | `none`                                                                                                  |
+| Accent usage     | The submit button is the single high-contrast action in each step                                        |
+
+**Pattern notes:**
+The footer renders within the step form so its primary button submits that form. It shows a real pending label and disables the action while saving; the back link is omitted on the first step.
+
+### OnboardingStepForms
+
+Files: `components/onboarding/ProfileStep.tsx`, `PayoutStep.tsx`, `EventDetailsStep.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class                                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------|
+| Background       | Step bodies inherit the shared `bg-surface` wizard panel                                                                      |
+| Border           | Inputs use `border border-border`; upload targets use `border-dashed border-line-2`                                          |
+| Border radius    | Inputs `rounded-lg`; organizer logo dropzone `rounded-xl`                                                                      |
+| Text — primary   | `text-ink`                                                                                                                    |
+| Text — secondary | `text-ink-2`; placeholders and field labels use `text-ink-3`                                                                  |
+| Spacing          | Heading `text-[20px] font-extrabold`; fields `gap-2`; step introduction `mt-1 text-[12.5px] leading-5`                        |
+| Focus state      | `focus:outline-none focus:ring-2 focus:ring-brand-line` on editable text controls                                             |
+| Accent usage     | `border-brand-line bg-brand-soft text-brand` for the selected event format; neutral `bg-sunken` notices explain preview-only behavior |
+
+**Pattern notes:**
+Profile, payout, and event forms are persisted through authenticated Server Actions. Organizer logo and event cover files use the shared staged-upload endpoint. Payout bank and account fields are transient and BVN is never requested; only Paystack's returned subaccount code is retained. Each form shows a human-readable error and disables submission while saving. Repeat events reuse organizer/payout setup and start with a separate event draft.
+
+### ReviewPublishStep
+
+File: `components/onboarding/ReviewPublishStep.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class                                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------|
+| Background       | Event preview `bg-surface`; ticket preview uses `bg-gradient-to-br from-tier-b-1 to-tier-b-2`                   |
+| Border           | Event preview `border border-border`; tier rows `border border-border`                                         |
+| Border radius    | `rounded-2xl` preview cards; `rounded-lg` tier rows                                                             |
+| Text — primary   | `text-ink`                                                                                                       |
+| Text — secondary | `text-ink-3`                                                                                                     |
+| Spacing          | Preview grid `gap-5`; cards `p-3` or `p-3.5`                                                                    |
+| Shadow           | `shadow-lg` on the colored ticket-card preview                                                                  |
+| Accent usage     | `from-tier-a-1 to-tier-a-2` event banner; `from-tier-b-1 to-tier-b-2` sample ticket card                       |
+
+**Pattern notes:**
+The event and ticket rows render the organizer's saved draft. The QR icon remains decorative and explicitly labeled `PREVIEW`; it is not a ticket code. Publishing is submitted from this form and validated atomically on the server. Published-event confirmation offers a direct path to create another event.
+
+### OnboardingPage
+
+File: `components/onboarding/OnboardingPage.tsx`
+Last updated: 2026-10-16
+
+| Property         | Class                                      |
+| ---------------- | -------------------------------------------|
+| Background       | `bg-background`                             |
+| Border           | Inherited from the shared wizard panel      |
+| Border radius    | Inherited from the shared wizard panel      |
+| Spacing          | Main content `pb-20 md:pb-10`               |
+| Accent usage     | Uses the shared `Navbar` and `BottomTabBar` |
+
+**Pattern notes:**
+All five onboarding routes use the same server-loaded page composition. The page authenticates the user, loads the organizer profile and either the selected event draft or the published-event confirmation, and redirects away from inaccessible future steps. Completed organizers can start a fresh event at event details; dashboard draft actions resume by explicit event ID. The existing app navigation remains in place.
 
 ### TierDesignerStep
 
 File: components/onboarding/TierDesignerStep.tsx
-Last updated: 2026-09-20
+Last updated: 2026-11-03
 
-| Property         | Class                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------|
-| Swatch           | `h-7.5 w-7.5 rounded-full` filled with the tier's gradient; `ring-2 ring-ink ring-offset-2 ring-offset-surface` when selected |
-| Custom swatch    | `border border-dashed border-line-2 flex items-center justify-center text-ink-3` "+" affordance opens the image upload |
-| Drop zone        | `border-[1.5px] border-dashed border-line-2 rounded-2xl` — shared `Dropzone` primitive, not a bespoke one  |
-| Live preview     | Renders an actual `TicketCard` instance with the in-progress color/image, never a simplified mock — what the organizer sees here must be pixel-identical to what ships to the attendee's wallet |
+| Property         | Class                                                                                                                              |
+| ---------------- | -----------------------------------------------------------------------------------------------------------------------------------|
+| Swatch           | `h-7 w-7 rounded-full` filled with a token gradient; `ring-2 ring-ink ring-offset-2 ring-offset-surface` when selected             |
+| Custom swatch    | Native color picker over `border border-dashed border-line-2`; selected custom hex uses an inline background value                |
+| Image target     | `border-dashed border-line-2 rounded-2xl bg-surface`                                                                                |
+| Card options     | Shape `3D card` / `Torn ticket`; finish `Normal` / `Metallic`; face text `Black` / `White`                                          |
+| Live preview     | Shared `TicketCardFace`; reflects color, image, shape, finish, and text color with a decorative QR placeholder                      |
+| Accent usage     | Preset colors use tier, warn, and live tokens; custom organizer color uses a validated six-digit hex value                          |
 
 **Pattern notes:**
-The live preview panel re-uses the real `TicketCard` component directly rather than a lookalike — this is a hard rule, not a suggestion, because any drift between "preview" and "actual" erodes the one guarantee this step exists to give an organizer. Card image upload accepts up to `MAX_TICKET_CARD_IMAGE_MB` (see `lib/constants.ts`) client-side before the request is even sent, purely to fail fast — the bucket policy is still the real enforcement per `library-docs.md`.
+This step persists up to 20 ticket tiers through an ownership-checked RPC. Styling is saved per tier with safe defaults for older callers and existing events. Optional images are staged, optimized server-side, and attached to the saved tier. The live card remains a sample preview, not an issued ticket.
 
 ### DashboardStatsBar
 
@@ -294,7 +526,7 @@ Last updated: 2026-09-20
 | Spacing          | `flex items-end gap-2.5 h-24`                                                                              |
 
 **Pattern notes:**
-Bar height is proportional to `count / firstStageCount`, not independently scaled per bar — so the visual drop-off between stages is honest at a glance. Data source is the PostHog server-side query described in `library-docs.md`; this component never calls PostHog's client SDK directly.
+Bar height is proportional to `count / firstStageCount`, not independently scaled per bar — so the visual drop-off between stages is honest at a glance. Data source is the PostHog server-side query described in `library-docs.md`; this component never calls PostHog's client SDK directly. The paid checkout stage counts only successful paid-reservation API responses, not failed attempts or free-ticket orders.
 
 ### DoorStaffPanel
 
@@ -344,15 +576,16 @@ Headline font size (`22px`) and orb size (`84px`) are intentionally the largest 
 ### BottomTabBar (mobile)
 
 File: components/layout/BottomTabBar.tsx
-Last updated: 2026-09-20
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
 | Background       | `bg-surface`                                                                                               |
 | Border           | `border-t border-border`                                                                                  |
+| Border radius    | Active tab `rounded-xl`                                                                                    |
 | Icon — inactive  | `text-ink-3`                                                                                               |
-| Icon — active    | `text-brand`                                                                                               |
-| Spacing          | `flex justify-around py-2.5`                                                                                |
+| Icon — active    | `bg-brand-soft text-brand`                                                                                 |
+| Spacing          | `flex items-center justify-around px-4 py-2.5`; tab hit target `h-9 w-12`                                  |
 
 **Pattern notes:**
 Four tabs fixed in this order always: Discover, My tickets, Create (center, leads to the onboarding wizard or event creation if already an organizer), Profile. Never reorder or add a fifth tab — if a new top-level destination is needed, it goes in Profile's list instead.
@@ -360,19 +593,19 @@ Four tabs fixed in this order always: Discover, My tickets, Create (center, lead
 ### Navbar (desktop)
 
 File: components/layout/Navbar.tsx
-Last updated: 2026-10-09
+Last updated: 2026-11-03
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
 | Background       | `bg-surface`                                                                                                |
 | Border           | `border-b border-border`                                                                                  |
-| Text — primary   | `text-[13px] font-semibold text-ink-2`, active link `text-ink`                                             |
-| Spacing          | `h-[54px] px-5 flex items-center justify-between gap-4.5`                                                  |
-| Auth control     | `h-[42px] w-[112px] rounded-md border border-line-2 bg-surface`; signed-in action uses `LogOut` icon       |
-| Accent usage     | `bg-brand text-brand-ink` on the single "Create event" CTA only                                            |
+| Text — primary   | `text-[13px] font-semibold text-ink-2`, active link `text-brand`                                           |
+| Spacing          | `h-[54px] px-5 flex items-center justify-between gap-5`                                                    |
+| Auth control     | Profile avatar `h-9 w-9 rounded-full`; sign-out icon uses the same neutral hover surface                   |
+| Accent usage     | `bg-brand text-brand-ink` on the single "Create event" CTA; logo mark uses the brand token                 |
 
 **Pattern notes:**
-The control follows Supabase's live auth state: logged-out users see "Log in," while signed-in users get a "Log out" action that calls `supabase.auth.signOut()`. A brief status placeholder is shown while the browser session is restored, and the control keeps a fixed width across states. The "Create event" CTA remains unchanged.
+The control follows Supabase's live auth state: logged-out users see "Log in," while signed-in users get a profile avatar link and a separate "Log out" action that calls `supabase.auth.signOut()`. A brief status placeholder is shown while the browser session is restored. The "Create event" CTA remains the single high-contrast action.
 
 ---
 
@@ -398,3 +631,104 @@ File: components/ui/Field.tsx
 Last updated: 2026-09-20
 
 `h-10 rounded-lg border border-border bg-surface-2 px-3 text-[13px]`, placeholder `text-ink-3`, filled `text-ink font-medium`. Every text input in the app — checkout forms, onboarding steps, search — renders through this one primitive so focus rings, error states, and disabled states only need fixing in one file.
+
+### DashboardStatCards
+
+File: components/dashboard/DashboardStatCards.tsx
+Last updated: 2026-10-17
+
+| Property         | Class                                                          |
+| ---------------- | -------------------------------------------------------------- |
+| Background       | `bg-surface-2`                                                 |
+| Border           | `border border-border`                                         |
+| Border radius    | `rounded-2xl`                                                   |
+| Text — primary   | `text-[23px] font-extrabold tracking-tight text-ink`            |
+| Text — secondary | `text-[11px] font-bold text-ink-3`; detail `text-[10.5px]`     |
+| Spacing          | `p-3.5`; `grid-cols-2 gap-3 lg:grid-cols-4`                    |
+| Hover state      | None                                                            |
+| Shadow           | None                                                            |
+| Accent usage     | Net earnings detail explicitly says “After 20.3% fee”          |
+
+**Pattern notes:**
+Stat cards use the established dashboard token scale and show organizer earnings only as net after commission. Phase 5 currently supplies sample values; live reads are not wired yet.
+
+### DashboardFunnelPreview / DashboardFunnel
+
+Files: `components/dashboard/DashboardFunnelPreview.tsx`, `components/dashboard/DashboardFunnel.tsx`
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| Background       | `bg-surface`; bars use `bg-brand-soft` / `bg-brand`                                       |
+| Border           | `border border-border`; early bars use `border-brand-line`                               |
+| Border radius    | `rounded-2xl`; bars `rounded-t-lg`                                                       |
+| Text — primary   | `text-[16px] font-extrabold text-ink`; counts `text-[11px] font-extrabold tabular-nums`  |
+| Text — secondary | `text-[11px] font-semibold text-ink-3`; labels `text-[10px] font-bold text-ink-3`        |
+| Spacing          | Panel `p-4 md:p-6`; chart `mt-6`; bars `gap-2.5`                                        |
+| Hover state      | None                                                                                    |
+| Shadow           | None                                                                                    |
+| Accent usage     | Final paid stage is solid `bg-brand`; earlier stages are `bg-brand-soft`                |
+
+**Pattern notes:**
+Mock stage bar heights follow the displayed sample counts proportionally. The live funnel preserves this visual pattern and uses server-side, organizer-scoped PostHog counts. When the query is unavailable, it shows a clear unavailable state rather than preview/sample values.
+
+### DashboardOverviewPreview / EventDashboardPreview / Live Organizer Dashboards
+
+Files: `components/dashboard/DashboardOverviewPreview.tsx`, `components/dashboard/EventDashboardPreview.tsx`, `app/dashboard/page.tsx`, `app/dashboard/[event_id]/page.tsx`
+Last updated: 2026-11-03
+Last updated: 2026-10-17
+
+| Property         | Class                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------ |
+| Background       | Page `bg-background`; event rows and panels `bg-surface`; stats `bg-surface-2`             |
+| Border           | `border border-border`; list separators `divide-y divide-border`                           |
+| Border radius    | Panels `rounded-2xl`; status pills `rounded-full`; icon chips `rounded-lg`                 |
+| Text — primary   | `text-ink`; page heading `text-[23px–24px] font-extrabold tracking-tight`                  |
+| Text — secondary | `text-ink-2`; helper text `text-[10.5px–12px] font-semibold text-ink-3`                    |
+| Spacing          | Page `px-4 py-5 pb-24 sm:px-6 md:py-8`; panels `p-4 md:p-6`                                |
+| Hover state      | Neutral actions `hover:bg-surface-2`; links `hover:text-brand` / `hover:bg-brand-soft`    |
+| Shadow           | None                                                                                       |
+| Accent usage     | `bg-brand` primary actions; `bg-ok-soft text-ok-ink` for published state                  |
+
+**Pattern notes:**
+Preview screens use clearly labeled sample data and local-only preview actions; live routes use organizer-scoped Supabase metrics and server-side PostHog counts. Earnings are represented as net after the platform fee. Dashboard pages keep the standard navbar and mobile tabs, with no dashboard tab falsely marked active.
+
+### DoorStaffPreview / DoorStaffManager
+
+Files: `components/door-staff/DoorStaffPreview.tsx`, `components/door-staff/DoorStaffManager.tsx`
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| Background       | Gate rows, modal, and QR canvas `bg-surface`; form control `bg-surface-2`                    |
+| Border           | `border border-border`; modal `border border-border`                                       |
+| Border radius    | Panel/modal `rounded-2xl`; gate rows `rounded-lg`; link QR `rounded-xl`                     |
+| Text — primary   | `text-[13px] font-bold text-ink`; modal heading `text-[18px] font-extrabold`               |
+| Text — secondary | `text-[10.5px–12px] font-semibold text-ink-3`                                              |
+| Spacing          | Page `px-4 py-5 pb-24`; rows `px-4 py-4`; modal `p-5 sm:p-6`                                |
+| Hover state      | Neutral actions `hover:bg-surface-2`; primary action `hover:opacity-95`                    |
+| Shadow           | Modal `shadow-lg`                                                                          |
+| Accent usage     | Active gate icon `bg-brand-soft text-brand`; active/revoked pills use `bg-ok-soft text-ok-ink` / `bg-sunken text-ink-3`; QR encodes the one-time secure gate link |
+
+**Pattern notes:**
+Revoked rows remain visible as historical records. The live manager creates and revokes gates through organizer-authorized actions; its modal displays the plaintext token only once, while the database stores only the token hash. Revoke actions are immediate and are checked again on every scan.
+
+### ScannerPreview / CheckinScanner
+
+Files: `components/checkin/ScannerPreview.tsx`, `components/checkin/CheckinScanner.tsx`
+Last updated: 2026-11-03
+
+| Property         | Class                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| Background       | Landing `bg-background` with `bg-surface` card; live scan `bg-ink`; camera frame `bg-sunken`; result `bg-ok-soft` / `bg-live-soft` / `bg-sunken` |
+| Border           | Landing `border border-border`; live viewfinder `border-background/85`                         |
+| Border radius    | Main surfaces `rounded-2xl`; gate detail `rounded-xl`; logo tile `rounded-lg`; status orb `rounded-full` |
+| Text — primary   | `text-[22px] font-extrabold text-ink`; gate heading `text-[16px] font-extrabold`              |
+| Text — secondary | `text-[12px] font-medium text-ink-2`; captions `text-[10px] font-medium text-ink-3`           |
+| Spacing          | Landing card `p-5 sm:p-6`; live camera `min-h-[300px]`; controls `mt-3`                       |
+| Hover state      | Preview controls `hover:bg-surface-2`; primary action `hover:opacity-95`                     |
+| Shadow           | Landing panel `shadow-sm`                                                                    |
+| Accent usage     | Brand mark and gate icon use `bg-brand-soft text-brand`; result orb `bg-ok`, `bg-live`, or `bg-ink-3`; scanner intentionally has no app navigation |
+
+**Pattern notes:**
+The landing screen gives staff the event and assigned gate, and labels the check-in count as event-wide because that is the scope returned by the scan-context RPC. The live scanner uses a dark, chromeless camera layout, requests camera access only after staff starts scanning, and submits decoded tokens for online validation. It displays ticket tier but no attendee identity; network failure is a distinct state and never accepts or queues a scan.
