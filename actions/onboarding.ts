@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { EVENT_CATEGORIES, EVENT_CITIES } from "@/lib/constants";
+import { EVENT_CATEGORIES } from "@/lib/constants";
 import { paymentProvider } from "@/lib/paystack-provider";
 import type { Bank } from "@/lib/payment-provider";
 import { createClient } from "@/utils/supabase/server";
@@ -34,9 +34,11 @@ type EventInput = {
   title: string;
   description: string;
   category: (typeof EVENT_CATEGORIES)[number];
-  city: (typeof EVENT_CITIES)[number] | null;
+  city: string | null;
   format: EventFormat;
   venue: string;
+  venueLatitude: number | null;
+  venueLongitude: number | null;
   onlineJoinUrl: string | null;
   startsAt: string;
   endsAt: string;
@@ -422,8 +424,18 @@ function parseEventInput(value: unknown): EventInput | null {
   const category = value.category;
   const matchedCategory = EVENT_CATEGORIES.find((item) => item === category);
   const format = value.format;
-  const matchedCity = EVENT_CITIES.find((item) => item === value.city);
-  const venue = typeof value.venue === "string" ? value.venue.trim() : "";
+  const location = isRecord(value.location) ? value.location : null;
+  const city = typeof location?.city === "string" ? location.city.trim() : "";
+  const venue = typeof location?.venueAddress === "string"
+    ? location.venueAddress.trim()
+    : typeof value.venue === "string"
+      ? value.venue.trim()
+      : "";
+  const venueLatitude =
+    typeof location?.latitude === "number" ? location.latitude : null;
+  const venueLongitude =
+    typeof location?.longitude === "number" ? location.longitude : null;
+  const countryCode = location?.countryCode;
   const onlineJoinUrl =
     format === "online" ? parseHttpsJoinUrl(value.onlineJoinUrl) : null;
   const startsAt = typeof value.startsAt === "string" ? value.startsAt : "";
@@ -441,9 +453,21 @@ function parseEventInput(value: unknown): EventInput | null {
     description.length > 5000 ||
     !matchedCategory ||
     (format !== "in_person" && format !== "online") ||
-    (format === "in_person" && !matchedCity) ||
     venue.length < 2 ||
     venue.length > 250 ||
+    (format === "in_person" &&
+      (typeof countryCode !== "string" ||
+        countryCode.toLocaleLowerCase() !== "ng" ||
+        city.length < 2 ||
+        city.length > 120 ||
+        venueLatitude === null ||
+        !Number.isFinite(venueLatitude) ||
+        venueLatitude < -90 ||
+        venueLatitude > 90 ||
+        venueLongitude === null ||
+        !Number.isFinite(venueLongitude) ||
+        venueLongitude < -180 ||
+        venueLongitude > 180)) ||
     onlineJoinUrl === undefined ||
     eventId === undefined ||
     (value.createNew !== undefined && typeof value.createNew !== "boolean") ||
@@ -462,9 +486,11 @@ function parseEventInput(value: unknown): EventInput | null {
     title,
     description,
     category: matchedCategory,
-    city: format === "in_person" ? matchedCity ?? null : null,
+    city: format === "in_person" ? city : null,
     format,
     venue,
+    venueLatitude: format === "in_person" ? venueLatitude : null,
+    venueLongitude: format === "in_person" ? venueLongitude : null,
     onlineJoinUrl,
     startsAt: new Date(startsAt).toISOString(),
     endsAt: new Date(endsAt).toISOString(),
@@ -504,6 +530,8 @@ export async function saveEventStep(
       city: parsed.city,
       format: parsed.format,
       venue_address: parsed.venue,
+      venue_latitude: parsed.venueLatitude,
+      venue_longitude: parsed.venueLongitude,
       starts_at: parsed.startsAt,
       ends_at: parsed.endsAt,
       status: "draft",
@@ -515,6 +543,8 @@ export async function saveEventStep(
       | "city"
       | "format"
       | "venue_address"
+      | "venue_latitude"
+      | "venue_longitude"
       | "starts_at"
       | "ends_at"
       | "status"

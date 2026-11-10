@@ -6,7 +6,9 @@ import { Navbar } from "@/components/layout/Navbar";
 import { StatusBadge } from "@/components/discover/StatusBadge";
 import { EventPageAnalytics } from "@/components/events/EventPageAnalytics";
 import { TicketTierSelector } from "@/components/events/TicketTierSelector";
+import { VenueMap } from "@/components/events/VenueMap";
 import { getEventCardData, getEventCardGradient } from "@/lib/event-display";
+import { getEventLocationLabel } from "@/lib/locations";
 import type { PublicEvent } from "@/types/events";
 
 type Props = {
@@ -83,13 +85,24 @@ export function EventDetail({ event, serverNow }: Props) {
                     <MapPin aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
                   )}
                   <span>
-                    {event.format === "online" ? "Online event" : event.venue_address}
-                    {event.format === "in_person" && event.city
-                      ? ` · ${event.city}`
-                      : ""}
+                    {event.format === "online"
+                      ? "Online event"
+                      : getEventLocationLabel(event.venue_address, event.city)}
                   </span>
                 </p>
               </div>
+
+              {event.format === "in_person" ? (
+                <section className="mt-7 border-t border-border pt-5">
+                  <h2 className="text-[16px] font-extrabold text-ink">Event location</h2>
+                  <VenueMap
+                    city={event.city}
+                    latitude={event.venue_latitude}
+                    longitude={event.venue_longitude}
+                    venueAddress={event.venue_address}
+                  />
+                </section>
+              ) : null}
 
               {event.description ? (
                 <section className="mt-7 border-t border-border pt-5">

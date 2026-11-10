@@ -792,3 +792,15 @@ Quick reference for the rules in this file that carry real consequences if broke
 | Compute "Live" or a countdown from the device clock | Server-provided timestamps |
 | Copy Supabase data into Zustand | Let React Query own server state |
 | Put a secret behind `NEXT_PUBLIC_` | Server-only env vars for every secret |
+
+---
+
+## Geoapify (Nigerian Venue Search & Static Maps)
+
+Geoapify powers in-person venue autocomplete and static maps. The browser key is `NEXT_PUBLIC_GEOAPIFY_API_KEY`; Next.js inlines `NEXT_PUBLIC_` variables at build time, so set it before building and restrict its allowed referrers and APIs in Geoapify. It is intentionally public, not a secret.
+
+Autocomplete uses `https://api.geoapify.com/v1/geocode/autocomplete` with `filter=countrycode:ng`, `format=json`, a three-character minimum query, and a short debounce. Parse response data as `unknown`, discard results without a formatted address, Nigeria country code, usable city/state, and finite in-range coordinates, and never rely on arbitrary typed organizer input as a selected venue. Attendees may still use free text in Discover.
+
+In-person events store the selected formatted venue, city/state, latitude, and longitude. Server Actions validate the selected country and coordinate shape/ranges; database constraints enforce coordinate pairing/ranges and require coordinates when publishing a physical event. Event detail static maps use `https://maps.geoapify.com/v1/staticmap` and must display attribution to Geoapify and OpenStreetMap contributors. The separate directions action uses the Google Maps Directions URL with the stored coordinates (or address for legacy events).
+
+Geoapify's free plan has quotas and requires registration; include attribution and monitor the account's usage limits. Do not use the public OpenStreetMap Nominatim endpoint for autocomplete: its usage policy explicitly disallows that pattern.

@@ -15,7 +15,7 @@ export function EmptyState({ cityName = "this location", onReset }: Props) {
         Nothing in {cityName} yet
       </h3>
       <p className="mt-2 max-w-[240px] text-[12.5px] font-medium leading-5 text-ink-2">
-        Try another city, or be the first to host something here.
+        Try another location, or be the first to host something here.
       </p>
       {onReset && (
         <button
@@ -29,4 +29,3 @@ export function EmptyState({ cityName = "this location", onReset }: Props) {
     </div>
   );
 }
-

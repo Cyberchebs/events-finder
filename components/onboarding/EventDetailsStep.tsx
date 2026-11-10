@@ -12,7 +12,9 @@ import {
 import { uploadOnboardingImage } from "@/components/onboarding/imageUpload";
 import { WizardStepFooter } from "@/components/onboarding/WizardStepFooter";
 import type { EventDraftData } from "@/components/onboarding/types";
-import { EVENT_CATEGORIES, EVENT_CITIES } from "@/lib/constants";
+import { LocationAutocomplete } from "@/components/location/LocationAutocomplete";
+import { EVENT_CATEGORIES } from "@/lib/constants";
+import type { NigeriaLocation } from "@/lib/locations";
 
 const inputClassName =
   "h-10 min-w-0 rounded-lg border border-border bg-surface-2 px-3 text-[12px] font-medium text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-brand-line";
@@ -68,8 +70,24 @@ export function EventDetailsStep({
     event?.format ?? "in_person",
   );
   const [onlineJoinUrl, setOnlineJoinUrl] = useState(event?.onlineJoinUrl ?? "");
-  const [city, setCity] = useState(
-    EVENT_CITIES.find((option) => option === event?.city) ?? EVENT_CITIES[0],
+  const [locationQuery, setLocationQuery] = useState(
+    event?.venue_address ?? "",
+  );
+  const [selectedLocation, setSelectedLocation] = useState<NigeriaLocation | null>(
+    event?.venue_latitude !== null &&
+      event?.venue_latitude !== undefined &&
+      event.venue_longitude !== null &&
+      event.venue_longitude !== undefined &&
+      event.city
+      ? {
+          label: event.venue_address ?? "",
+          venueAddress: event.venue_address ?? "",
+          city: event.city,
+          latitude: event.venue_latitude,
+          longitude: event.venue_longitude,
+          countryCode: "ng",
+        }
+      : null,
   );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -80,6 +98,10 @@ export function EventDetailsStep({
   async function handleSubmit(submitEvent: FormEvent<HTMLFormElement>) {
     submitEvent.preventDefault();
     setError(null);
+    if (format === "in_person" && !selectedLocation) {
+      setError("Choose a Nigerian venue from the location suggestions.");
+      return;
+    }
     setIsPending(true);
 
     try {
@@ -90,9 +112,9 @@ export function EventDetailsStep({
         title: formData.get("title"),
         description: formData.get("description"),
         category: formData.get("category"),
-        city: format === "in_person" ? city : null,
+        location: format === "in_person" ? selectedLocation : null,
         format,
-        venue: formData.get("venue"),
+        venue: format === "online" ? formData.get("venue") : null,
         onlineJoinUrl: format === "online" ? onlineJoinUrl : null,
         startsAt: toIsoDateTime(formData.get("startDate"), formData.get("startTime")),
         endsAt: toIsoDateTime(formData.get("endDate"), formData.get("endTime")),
@@ -168,28 +190,16 @@ export function EventDetailsStep({
           />
 
           {format === "in_person" ? (
-            <>
-              <label className="sr-only" htmlFor="event-city">City</label>
-              <select
-                className={inputClassName}
-                id="event-city"
-                onChange={(changeEvent) => {
-                  const selectedCity = EVENT_CITIES.find(
-                    (option) => option === changeEvent.target.value,
-                  );
-                  if (selectedCity) {
-                    setCity(selectedCity);
-                  }
-                }}
-                required
-                value={city}
-              >
-                <option disabled value="">City</option>
-                {EVENT_CITIES.map((cityOption) => (
-                  <option key={cityOption} value={cityOption}>{cityOption}</option>
-                ))}
-              </select>
-            </>
+            <LocationAutocomplete
+              id="event-location"
+              label="Event venue"
+              onPlaceSelect={setSelectedLocation}
+              onValueChange={setLocationQuery}
+              placeholder="Search for a venue or place in Nigeria"
+              selectedPlace={selectedLocation}
+              selectionRequired
+              value={locationQuery}
+            />
           ) : null}
 
           <input name="format" type="hidden" value={format} />
@@ -222,19 +232,21 @@ export function EventDetailsStep({
             </button>
           </div>
 
-          <label className="sr-only" htmlFor="event-location">
-            {format === "in_person" ? "Venue address" : "Online event platform"}
-          </label>
-          <input
-            className={inputClassName}
-            defaultValue={event?.venue_address ?? ""}
-            id="event-location"
-            maxLength={250}
-            name="venue"
-            placeholder={format === "in_person" ? "Venue address" : "Online event platform"}
-            required
-            type="text"
-          />
+          {format === "online" ? (
+            <>
+              <label className="sr-only" htmlFor="event-platform">Online event platform</label>
+              <input
+                className={inputClassName}
+                defaultValue={event?.venue_address ?? ""}
+                id="event-platform"
+                maxLength={250}
+                name="venue"
+                placeholder="Online event platform"
+                required
+                type="text"
+              />
+            </>
+          ) : null}
           {format === "online" ? (
             <div className="space-y-1">
               <label

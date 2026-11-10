@@ -44,7 +44,8 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 ### Landing / Discover
 
 - Logged-out and logged-in users both land on Discover — there's no separate marketing homepage gate
-- Horizontal category chips (scrollable on mobile) beneath a location-aware search bar on both mobile and desktop
+- Horizontal category chips (scrollable on mobile) beneath event and Nigerian location search fields on both mobile and desktop; location search uses Geoapify suggestions and free-text matching across venue/city
+- Event categories are Music & Concerts, Comedy & Performing Arts, Fan Culture & Conventions, Gaming & Esports, Festivals & Culture, Food & Drink, Parties & Nightlife, Sports & Fitness, Tech & Business, Arts, Film & Fashion, Workshops & Learning, and Family, Faith & Causes
 - Each event card shows exactly one status: **Free**, a relative countdown ("In 4 days"), or **Live** with a pulsing indicator
 
 ### Onboarding
@@ -58,7 +59,7 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 
 - Step 1 — Organizer profile (name, logo, bio)
 - Step 2 — Payout setup (Paystack subaccount — bank/account details are sent to Paystack for verification, BVN is not requested, and bank details are not stored)
-- Step 3 — First event (title, in-person/online, venue or join-link placeholder, start **and end** time, category, description, cover image)
+- Step 3 — First event (title, in-person/online, verified Nigerian venue suggestion or online platform, start **and end** time, category, description, cover image)
 - Step 4 — Ticket tiers (name, price, quantity, per-tier card color/image, shape, finish, and black/white text)
 - Step 5 — Review & publish, showing a live preview of both the public event card and the attendee's actual ticket card
 - Every step saves independently and is resumable — an interrupted organizer picks back up where they left off, and an unpublished event sits as a visible draft rather than disappearing
@@ -119,6 +120,7 @@ Mobile: fixed bottom tab bar, four tabs — Discover, My tickets, Create, Profil
 - Discover feed with category filter, location-aware search, Free/Live/countdown status
 - Single signup flow with organizer role as a later upgrade
 - Event creation — in-person or online, with a required end time
+- Verified Nigerian in-person venue selection, venue coordinates, an event-detail map, and Google Maps directions
 - Ticket tiers with per-tier custom card color/image
 - Paystack checkout with a database-enforced reservation hold
 - Webhook-driven, idempotent ticket issuance with signed QR tokens

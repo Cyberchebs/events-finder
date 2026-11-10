@@ -9,7 +9,7 @@ import { DiscoverSearchBar } from "@/components/discover/DiscoverSearchBar";
 import { CategoryChips } from "@/components/discover/CategoryChips";
 import { EmptyState } from "@/components/discover/EmptyState";
 import { usePublishedEvents } from "@/components/discover/usePublishedEvents";
-import { EVENT_CATEGORIES, EVENT_CITIES } from "@/lib/constants";
+import { EVENT_CATEGORIES } from "@/lib/constants";
 import { getEventCardData } from "@/lib/event-display";
 import type { PublicEventFeed } from "@/types/events";
 
@@ -17,13 +17,12 @@ type Props = {
   initialFeed: PublicEventFeed | null;
 };
 
-const AVAILABLE_CITIES = [...EVENT_CITIES, "All"];
 const CATEGORY_NAMES = ["All", ...EVENT_CATEGORIES];
 
 export function DiscoverPageClient({ initialFeed }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedCity, setSelectedCity] = useState("Lagos");
+  const [locationQuery, setLocationQuery] = useState("");
   const { data, error, isPending, refetch } = usePublishedEvents(initialFeed);
 
   const filteredEvents = useMemo(() => {
@@ -31,10 +30,16 @@ export function DiscoverPageClient({ initialFeed }: Props) {
       return [];
     }
     const query = searchQuery.trim().toLocaleLowerCase();
+    const location = locationQuery.trim().toLocaleLowerCase();
 
     return data.events
       .filter((event) => {
-        if (selectedCity !== "All" && event.city !== selectedCity) {
+        if (
+          location &&
+          ![event.venue_address ?? "", event.city ?? ""].some((field) =>
+            field.toLocaleLowerCase().includes(location),
+          )
+        ) {
           return false;
         }
         if (selectedCategory !== "All" && event.category !== selectedCategory) {
@@ -53,7 +58,7 @@ export function DiscoverPageClient({ initialFeed }: Props) {
         ].some((field) => field.toLocaleLowerCase().includes(query));
       })
       .map((event) => getEventCardData(event, data.serverNow));
-  }, [data, searchQuery, selectedCategory, selectedCity]);
+  }, [data, searchQuery, locationQuery, selectedCategory]);
 
   const handleCategorySelection = (category: string) => {
     if (category !== selectedCategory) {
@@ -61,19 +66,14 @@ export function DiscoverPageClient({ initialFeed }: Props) {
     }
   };
 
-  const handleCitySelection = (city: string) => {
-    if (city !== selectedCity) {
-      setSelectedCity(city);
-    }
-  };
-
   const handleResetFilters = () => {
-    handleCitySelection("Lagos");
+    setLocationQuery("");
     handleCategorySelection("All");
     setSearchQuery("");
   };
 
-  const isSearchActive = searchQuery.trim().length > 0;
+  const isSearchActive =
+    searchQuery.trim().length > 0 || locationQuery.trim().length > 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-ink">
@@ -89,7 +89,7 @@ export function DiscoverPageClient({ initialFeed }: Props) {
             <span className="hidden md:inline">Your city. Your people. Your next plan.</span>
           </h1>
           <p className="mt-1 text-[12px] font-medium text-ink-2 md:text-[13px]">
-            Discover unforgettable experiences, from the Island to the Mainland.
+            Discover unforgettable experiences across Nigeria.
           </p>
         </header>
 
@@ -97,9 +97,8 @@ export function DiscoverPageClient({ initialFeed }: Props) {
           <DiscoverSearchBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            selectedCity={selectedCity}
-            onCityChange={handleCitySelection}
-            availableCities={AVAILABLE_CITIES}
+            locationQuery={locationQuery}
+            onLocationChange={setLocationQuery}
           />
           <div className="md:pt-1">
             <CategoryChips
@@ -114,7 +113,7 @@ export function DiscoverPageClient({ initialFeed }: Props) {
           {!isSearchActive && !isPending && !error ? (
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-[16px] font-extrabold tracking-tight text-ink md:text-[19px]">
-                Events around {selectedCity === "All" ? "you" : selectedCity}
+                Events across Nigeria
               </h2>
               <span className="text-[11px] font-bold text-brand">
                 {filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"}
@@ -141,15 +140,15 @@ export function DiscoverPageClient({ initialFeed }: Props) {
             </div>
           ) : filteredEvents.length === 0 ? (
             <EmptyState
-              cityName={selectedCity === "All" ? "any location" : selectedCity}
+              cityName={locationQuery.trim() || "Nigeria"}
               onReset={handleResetFilters}
             />
           ) : isSearchActive ? (
             <>
               <p className="mb-3 text-[11.5px] font-semibold text-ink-3">
                 {filteredEvents.length} result
-                {filteredEvents.length === 1 ? "" : "s"} in{" "}
-                {selectedCity === "All" ? "all locations" : selectedCity}
+                {filteredEvents.length === 1 ? "" : "s"}
+                {locationQuery.trim() ? ` in ${locationQuery.trim()}` : " across Nigeria"}
               </p>
               <div className="max-w-3xl space-y-2.5">
                 {filteredEvents.map((event) => (

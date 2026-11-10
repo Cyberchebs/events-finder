@@ -6,11 +6,19 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 6 — Online Events (Feature 23 UI approved; Feature 24 implemented locally)
-**Last completed:** Phase 6 Feature 24 implemented; migration applied and linked schema/access-boundary checks passed
-**Next:** Verify the locked/unlocked ticket flow against a test online event with an issued ticket
+**Phase:** Phase 8 — Event Category Taxonomy (Feature 26 implemented; migration applied)
+**Last completed:** Phase 8 Feature 26 migration applied and verified in remote migration history
+**Next:** Verify organizer category selection, Discover filters, and publishing in the browser
 
-**Current limitation:** The Phase 6 migration is applied and verified in remote history. The legacy public URL column is absent; direct access to the private schema/table and anonymous RPC execution are denied, while authenticated access RPC execution is granted. No end-to-end online event/ticket fixture was available to exercise the locked and unlocked results. The development-only `/preview/online-join` route remains mock-only. PostHog private-query settings remain required for live funnel analytics. Dashboard/gate-management visual sign-off and an end-to-end check-in flow remain outstanding. Paystack sandbox/webhook verification remains outstanding. Phase 2, Phase 3, Phase 4, Phase 5, and Phase 6 migrations are applied and verified in remote migration history. Feature 08 remains implemented but unverified against a published event.
+**Current limitation:** Geoapify suggestions/static map rendering and published-event end-to-end location verification remain outstanding. Existing published in-person events without coordinates show the directions action with a map-unavailable state until venue coordinates are saved. The Phase 6 migration is applied and verified in remote history. The legacy public URL column is absent; direct access to the private schema/table and anonymous RPC execution are denied, while authenticated access RPC execution is granted. No end-to-end online event/ticket fixture was available to exercise the locked and unlocked results. The development-only `/preview/online-join` route remains mock-only. PostHog private-query settings remain required for live funnel analytics. Dashboard/gate-management visual sign-off and an end-to-end check-in flow remain outstanding. Paystack sandbox/webhook verification remains outstanding. Phase 2, Phase 3, Phase 4, Phase 5, Phase 6, Phase 7, and Phase 8 migrations are applied and verified in remote migration history. Feature 08 remains implemented but unverified against a published event.
+
+**Recent feature:** Discover now searches all Nigerian events by venue/city text and supports Geoapify location suggestions plus free text. Organizers select a Nigeria-filtered Geoapify venue; its formatted address, city/state, and coordinates are stored. In-person event details render an attributed Geoapify static map with a Google Maps directions button. Migration `20261110223000_nigeria_event_locations.sql` is applied and verified.
+
+**Recent feature:** Replaced the five legacy event categories with the requested 12-category taxonomy. Organizer forms, Discover filters, category gradients, and the legacy category sidebar now use the shared list. Migration `20261111002500_replace_event_categories.sql` mapped existing `Music` and `Business` event rows and updated the publishing validator; it is applied and verified remotely. The published-event coordinate check remains `NOT VALID` and enforces coordinates on new writes.
+
+**Phase 7 validation:** Focused ESLint, `npx tsc --noEmit`, `npm run build`, and `git diff --check` passed. Live Geoapify suggestions and map rendering remain unverified; published-event end-to-end verification is still pending.
+
+**Phase 8 validation:** Focused ESLint, TypeScript, production build, exact category count/order, and whitespace checks passed. Remote verification confirmed all 12 categories are accepted by `publish_onboarding_event`, existing event categories were remapped, and the coordinate constraint remains installed.
 
 **Recent fix:** Completed organizers can create additional events without being redirected to the latest published event. New-event actions create a distinct draft; draft continuation carries its event ID through the wizard.
 
@@ -74,6 +82,12 @@ Update this file after every completed feature. Any AI agent reading this should
 ### Phase 6 — Online Events
 - [x] 23 Online Event Join Screen — Full UI (locked/unlocked token-styled states and development-only mock preview; visually approved)
 - [x] 24 Online Event Join Screen — Real Logic (private URL storage, draft organizer input, publish guard, ticket-checked RPC and join route implemented; migration applied)
+
+### Phase 7 — Nigerian Location Search & Event Maps
+- [x] 25 Location Search, Verified Venues & Maps — Geoapify autocomplete for Nigeria, all-Nigeria location text filtering, persisted venue coordinates, event-detail map, and Google Maps directions; migration applied and verified, live provider verification pending
+
+### Phase 8 — Event Category Taxonomy
+- [x] 26 Expanded Event Categories — replaced legacy categories with the requested 12, mapped existing event values, and updated publishing validation; migration applied and verified
 
 ---
 

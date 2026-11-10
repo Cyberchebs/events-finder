@@ -21,7 +21,7 @@ After building any component — update this file with the component name, file 
 ### DiscoverPage
 
 File: components/discover/DiscoverPageClient.tsx (server data bootstrap: app/page.tsx)
-Last updated: 2026-11-03
+Last updated: 2026-11-10
 
 | Property           | Class                                                                                                      |
 | ------------------ | ---------------------------------------------------------------------------------------------------------- |
@@ -31,10 +31,10 @@ Last updated: 2026-11-03
 | Search and filters | `DiscoverSearchBar` with horizontal `CategoryChips` on mobile and desktop                                 |
 | Results grid       | `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3`                                                     |
 | Loading/error      | Centered muted status text; retry action uses `border-line-2 bg-surface`                                  |
-| Empty state        | Existing `EmptyState` pattern with city-aware reset                                                       |
+| Empty state        | Existing `EmptyState` pattern with location-aware reset                                                    |
 
 **Pattern notes:**
-The page uses a welcoming responsive heading, a location-aware search field, and the same horizontal category chips at every breakpoint. Mobile keeps the fixed bottom tab bar. Event cards, results, retry, and empty states remain token-based. Event feed data is fetched server-first and refreshed through React Query.
+The page uses responsive event and Nigerian location search fields, and the same horizontal category chips at every breakpoint. Location filters match venue/city text across all events in Nigeria. Mobile keeps the fixed bottom tab bar. Event cards, results, retry, and empty states remain token-based. Event feed data is fetched server-first and refreshed through React Query.
 
 ### LoginPage
 
@@ -98,7 +98,7 @@ Cover uses a category-keyed `bg-gradient-to-br` tile beneath the optional event 
 ### EventDetail
 
 File: components/events/EventDetail.tsx
-Last updated: 2026-10-17
+Last updated: 2026-11-10
 
 | Property         | Class                                                                                                   |
 | ---------------- | --------------------------------------------------------------------------------------------------------|
@@ -111,9 +111,10 @@ Last updated: 2026-10-17
 | Spacing          | Main content `gap-7 p-4 md:p-7`; sections separated with `border-t border-border`                       |
 | Primary action   | `bg-brand text-brand-ink`; enabled after selecting an available tier                                     |
 | Shadow           | `none`                                                                                                   |
+| Venue map        | `VenueMap` static preview in `aspect-[16/9] rounded-xl border border-border bg-surface-2`; directions use the secondary action pattern |
 
 **Pattern notes:**
-The detail route shares the event card's category gradient, status badge, and token-based surface/border system. Ticket tiers are selectable through `TicketTierSelector`; its CTA passes the selected tier into Checkout. Sold-out and ended events remain unavailable.
+The detail route shares the event card's category gradient, status badge, and token-based surface/border system. In-person events show an attributed venue map and a Google Maps directions action beneath it. Ticket tiers are selectable through `TicketTierSelector`; its CTA passes the selected tier into Checkout. Sold-out and ended events remain unavailable.
 
 ### TicketTierSelector
 
@@ -214,26 +215,66 @@ Exactly one variant renders per card: `live` (pulsing dot + "LIVE"), `free` ("FR
 ### DiscoverSearchBar
 
 File: components/discover/DiscoverSearchBar.tsx
-Last updated: 2026-11-03
+Last updated: 2026-11-10
 
 | Property         | Class                                                                                                    |
 | ---------------- | ---------------------------------------------------------------------------------------------------------|
 | Background       | `bg-surface-2`                                                                                            |
 | Border           | `border border-border`                                                                                   |
-| Border radius    | `rounded-xl` mobile search, `rounded-lg` desktop input and city selector                                  |
+| Border radius    | `rounded-xl` event search on mobile, `rounded-lg` inputs on desktop                                       |
 | Text — primary   | `text-[13px] font-medium text-ink`; placeholder `text-ink-3`                                             |
-| Spacing          | Mobile city row plus `h-10 px-3 gap-2` search field; desktop controls in one row                          |
-| Hover state      | City selector `hover:text-ink` / `hover:border-line-2`                                                   |
+| Spacing          | Stacked mobile inputs; desktop `grid` with event and location search fields, each `h-10 px-3 gap-2`       |
+| Hover state      | Search clear action `hover:text-ink`; location suggestions use `hover:bg-surface-2 hover:text-ink`       |
 | Shadow           | `none`                                                                                                    |
-| Accent usage     | Search remains neutral; location pin uses `text-brand`                                                   |
+| Accent usage     | Search remains neutral; location pin uses `text-brand`; focus ring uses `ring-brand-line`                |
 
 **Pattern notes:**
-Mobile presents the city picker above a full-width search field. Desktop places the search and separate city picker side by side. Both retain manual city selection and outside-click dismissal.
+Mobile presents a full-width Nigerian location field above event search; desktop places both fields side by side. The location field suggests Geoapify results restricted to Nigeria and retains free-text filtering for attendees.
+
+### LocationAutocomplete
+
+File: components/location/LocationAutocomplete.tsx
+Last updated: 2026-11-10
+
+| Property         | Class                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------|
+| Background       | Input `bg-surface-2`; suggestions `bg-surface`                                                            |
+| Border           | `border border-border`; focus `focus-within:ring-2 focus-within:ring-brand-line`                          |
+| Border radius    | `rounded-lg` input; `rounded-xl` suggestion list                                                        |
+| Text — primary   | Input `text-[13px] font-medium text-ink`; suggestions `text-[12px] font-semibold text-ink-2`              |
+| Text — secondary | Status and helper text `text-[10px–11px] font-medium text-ink-3`                                          |
+| Spacing          | `h-10 px-3 gap-2`; suggestions `px-3 py-2.5`                                                              |
+| Hover state      | Suggestion `hover:bg-surface-2 hover:text-ink`; selected suggestion `bg-brand-soft text-brand`            |
+| Shadow           | Suggestion list `shadow-lg`                                                                               |
+| Accent usage     | `MapPin` uses `text-brand`; keyboard-active option uses the selected suggestion treatment                 |
+
+**Pattern notes:**
+Geoapify results are filtered to Nigeria and malformed/non-Nigerian results are discarded. Organizers must select a suggestion; Discover accepts either a selection or free text. The autocomplete is keyboard-operable and uses the existing neutral input, border, focus, and brand tokens.
+
+### VenueMap
+
+File: components/events/VenueMap.tsx
+Last updated: 2026-11-10
+
+| Property         | Class                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------|
+| Background       | Map image frame and unavailable state `bg-surface-2`                                                      |
+| Border           | `border border-border`                                                                                    |
+| Border radius    | `rounded-xl`; directions action `rounded-lg`                                                              |
+| Text — primary   | Directions action `text-[12px] font-bold text-ink`                                                        |
+| Text — secondary | Attribution and unavailable states `text-[10px–12px] font-medium text-ink-3`                              |
+| Spacing          | Map `aspect-[16/9]`; attribution `mt-2`; directions action `mt-3`                                         |
+| Hover state      | Directions action `hover:border-brand-line hover:text-brand`; attribution links `hover:text-ink-2`       |
+| Shadow           | Map frame none; directions action none                                                                    |
+| Accent usage     | Map attribution links Geoapify and OpenStreetMap; directions icon uses current text color                  |
+
+**Pattern notes:**
+In-person event details show the Geoapify static map when coordinates and the public key are configured. The Google Maps directions action remains available even when a map preview cannot load. Attribution is always visible with a rendered map.
 
 ### CategoryChips
 
 File: components/discover/CategoryChips.tsx
-Last updated: 2026-11-03
+Last updated: 2026-11-11
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
@@ -247,7 +288,7 @@ Last updated: 2026-11-03
 | Accent usage     | Active state uses the soft brand background and brand text                                                |
 
 **Pattern notes:**
-The same horizontally scrollable category chip row appears directly below search on mobile and desktop. "All" is always first. The legacy `CategorySidebar` remains available but is not used by the live Discover page.
+The same horizontally scrollable category chip row appears directly below search on mobile and desktop. "All" is always first, followed by the 12 shared event categories in their defined order. Long labels remain single-line, shrink-free chips within the horizontally scrollable row. The legacy `CategorySidebar` remains available but is not used by the live Discover page.
 
 ### TierSelector
 
@@ -366,10 +407,10 @@ Last updated: 2026-11-03
 **Pattern notes:**
 This component adds no independent visual treatment. It derives the countdown from the RPC's database timestamps and refreshes access after the threshold; the join URL is passed through only when the RPC says access is unlocked.
 
-### EventDetailsStep — private online URL field
+### EventDetailsStep — venue autocomplete and private online URL
 
 File: components/onboarding/EventDetailsStep.tsx
-Last updated: 2026-11-03
+Last updated: 2026-11-10
 
 | Property         | Class                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------|
@@ -384,7 +425,7 @@ Last updated: 2026-11-03
 | Accent usage     | Focus ring uses `focus:ring-2 focus:ring-brand-line`                                                     |
 
 **Pattern notes:**
-The URL is a separate optional HTTPS field for drafts; publishing requires it for online events. Keep the platform/venue field unchanged and load the draft URL only through the organizer-scoped RPC.
+In-person events require a Geoapify suggestion and save its venue, city/state, and coordinates. Online events retain the platform field and separate optional HTTPS join URL; publishing still requires the private URL. Draft URLs load only through the organizer-scoped RPC.
 
 ### WizardShell
 

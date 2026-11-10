@@ -18,6 +18,8 @@ export type PublicEvent = Pick<
   | "city"
   | "format"
   | "venue_address"
+  | "venue_latitude"
+  | "venue_longitude"
   | "starts_at"
   | "ends_at"
   | "organizer_id"

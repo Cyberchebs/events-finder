@@ -1,4 +1,5 @@
 import type { EventCardData, PublicEvent } from "@/types/events";
+import { getEventLocationLabel } from "@/lib/locations";
 
 const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 const LAGOS_TIME_ZONE = "Africa/Lagos";
@@ -32,7 +33,7 @@ export function getEventCardData(
   const locationLabel =
     event.format === "online"
       ? "Online"
-      : [event.venue_address, event.city].filter(Boolean).join(" · ");
+      : getEventLocationLabel(event.venue_address, event.city);
 
   return {
     ...event,
@@ -44,11 +45,18 @@ export function getEventCardData(
 
 export function getEventCardGradient(category: string): string {
   const categoryGradients: Record<string, string> = {
-    Music: "bg-gradient-to-br from-tier-a-1 to-tier-a-2",
-    Sports: "bg-gradient-to-br from-tier-b-1 to-tier-b-2",
-    Comedy: "bg-gradient-to-br from-tier-c-1 to-tier-c-2",
-    Nightlife: "bg-gradient-to-br from-tier-a-1 to-tier-a-2",
-    Business: "bg-gradient-to-br from-tier-b-1 to-tier-b-2",
+    "Music & Concerts": "bg-gradient-to-br from-tier-a-1 to-tier-a-2",
+    "Comedy & Performing Arts": "bg-gradient-to-br from-tier-c-1 to-tier-c-2",
+    "Fan Culture & Conventions": "bg-gradient-to-br from-tier-b-1 to-tier-b-2",
+    "Gaming & Esports": "bg-gradient-to-br from-tier-a-1 to-tier-a-2",
+    "Festivals & Culture": "bg-gradient-to-br from-tier-c-1 to-tier-c-2",
+    "Food & Drink": "bg-gradient-to-br from-tier-b-1 to-tier-b-2",
+    "Parties & Nightlife": "bg-gradient-to-br from-tier-a-1 to-tier-a-2",
+    "Sports & Fitness": "bg-gradient-to-br from-tier-b-1 to-tier-b-2",
+    "Tech & Business": "bg-gradient-to-br from-tier-b-1 to-tier-b-2",
+    "Arts, Film & Fashion": "bg-gradient-to-br from-tier-c-1 to-tier-c-2",
+    "Workshops & Learning": "bg-gradient-to-br from-tier-a-1 to-tier-a-2",
+    "Family, Faith & Causes": "bg-gradient-to-br from-tier-c-1 to-tier-c-2",
   };
 
   return categoryGradients[category] ?? "bg-gradient-to-br from-tier-a-1 to-tier-a-2";

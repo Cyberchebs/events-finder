@@ -34,12 +34,26 @@ create table if not exists public.events (
   city text,
   format public.event_format not null,
   venue_address text,
+  venue_latitude double precision,
+  venue_longitude double precision,
   starts_at timestamptz not null,
   ends_at timestamptz not null,
   status public.event_status not null default 'draft',
   currency text not null default 'NGN',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint events_venue_coordinates_pair_check
+    check ((venue_latitude is null) = (venue_longitude is null)),
+  constraint events_venue_latitude_range_check
+    check (venue_latitude is null or venue_latitude between -90 and 90),
+  constraint events_venue_longitude_range_check
+    check (venue_longitude is null or venue_longitude between -180 and 180),
+  constraint events_published_in_person_coordinates_check
+    check (
+      status <> 'published'
+      or format <> 'in_person'
+      or (venue_latitude is not null and venue_longitude is not null)
+    )
 );
 
 create table if not exists private.event_online_join_links (
@@ -589,9 +603,29 @@ begin
       and status = 'draft'
       and length(trim(title)) between 3 and 120
       and (description is null or length(description) <= 5000)
-      and category in ('Music', 'Sports', 'Comedy', 'Nightlife', 'Business')
+      and category in (
+        'Music & Concerts',
+        'Comedy & Performing Arts',
+        'Fan Culture & Conventions',
+        'Gaming & Esports',
+        'Festivals & Culture',
+        'Food & Drink',
+        'Parties & Nightlife',
+        'Sports & Fitness',
+        'Tech & Business',
+        'Arts, Film & Fashion',
+        'Workshops & Learning',
+        'Family, Faith & Causes'
+      )
       and length(trim(coalesce(venue_address, ''))) between 2 and 250
-      and (format = 'online' or city in ('Lagos', 'Abuja', 'Jos'))
+      and (
+        format = 'online'
+        or (
+          city is not null
+          and venue_latitude is not null
+          and venue_longitude is not null
+        )
+      )
       and starts_at < ends_at
   ) then
     raise exception 'A valid draft event is required before publishing';

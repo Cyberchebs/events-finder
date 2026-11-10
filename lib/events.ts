@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import type { PublicEvent, PublicEventFeed } from "@/types/events";
 
 const publicEventSelection =
-  "id, title, description, image_url, category, city, format, venue_address, starts_at, ends_at, organizer_id, ticket_types(id, name, price_kobo, quantity_available, quantity_sold)";
+  "id, title, description, image_url, category, city, format, venue_address, venue_latitude, venue_longitude, starts_at, ends_at, organizer_id, ticket_types(id, name, price_kobo, quantity_available, quantity_sold)";
 
 export async function getPublishedEvents(): Promise<PublicEventFeed> {
   const supabase = await createClient();

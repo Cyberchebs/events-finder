@@ -1,12 +1,20 @@
 import {
+  BriefcaseBusiness,
+  Dumbbell,
+  Gamepad2,
+  GraduationCap,
+  HandHeart,
   LayoutGrid,
   Music,
-  Trophy,
-  Laugh,
-  Moon,
-  Briefcase,
+  Palette,
+  PartyPopper,
+  Sparkles,
+  Theater,
+  UtensilsCrossed,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
+import { EVENT_CATEGORIES } from "@/lib/constants";
 
 type CategoryItem = {
   id: string;
@@ -14,13 +22,28 @@ type CategoryItem = {
   icon: LucideIcon;
 };
 
+const CATEGORY_ICONS: Record<(typeof EVENT_CATEGORIES)[number], LucideIcon> = {
+  "Music & Concerts": Music,
+  "Comedy & Performing Arts": Theater,
+  "Fan Culture & Conventions": UsersRound,
+  "Gaming & Esports": Gamepad2,
+  "Festivals & Culture": Sparkles,
+  "Food & Drink": UtensilsCrossed,
+  "Parties & Nightlife": PartyPopper,
+  "Sports & Fitness": Dumbbell,
+  "Tech & Business": BriefcaseBusiness,
+  "Arts, Film & Fashion": Palette,
+  "Workshops & Learning": GraduationCap,
+  "Family, Faith & Causes": HandHeart,
+};
+
 export const CATEGORIES: CategoryItem[] = [
   { id: "All", label: "All events", icon: LayoutGrid },
-  { id: "Music", label: "Music", icon: Music },
-  { id: "Sports", label: "Sports", icon: Trophy },
-  { id: "Comedy", label: "Comedy", icon: Laugh },
-  { id: "Nightlife", label: "Nightlife", icon: Moon },
-  { id: "Business", label: "Business", icon: Briefcase },
+  ...EVENT_CATEGORIES.map((category) => ({
+    id: category,
+    label: category,
+    icon: CATEGORY_ICONS[category],
+  })),
 ];
 
 type Props = {
@@ -64,4 +87,3 @@ export function CategorySidebar({
     </aside>
   );
 }
-

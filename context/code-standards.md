@@ -264,12 +264,13 @@ All environment variables defined in `.env.local` for development. Never hardcod
 | `CRON_SECRET` | Vercel Cron reservation-expiry route (server only) |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | `instrumentation-client.ts`, `instrumentation.ts` |
 | `NEXT_PUBLIC_POSTHOG_HOST` | `instrumentation-client.ts`, `instrumentation.ts` |
+| `NEXT_PUBLIC_GEOAPIFY_API_KEY` | `components/location/LocationAutocomplete.tsx`, `components/events/VenueMap.tsx`; public browser key, restrict by referrer and API in Geoapify |
 | `POSTHOG_PROJECT_API_KEY` | `utils/posthog/server.ts` |
 | `POSTHOG_API_HOST` | PostHog private query API (server only) |
 | `POSTHOG_PROJECT_ID` | PostHog private query API |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog private query API (server-only personal API key with `query:read`) |
 
-`NEXT_PUBLIC_` prefix means the variable is exposed to the browser. Never add `NEXT_PUBLIC_` to a secret key — `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `QR_TOKEN_SECRET`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`, `POSTHOG_PROJECT_API_KEY`, and `POSTHOG_PERSONAL_API_KEY` must never carry that prefix.
+`NEXT_PUBLIC_` prefix means the variable is exposed to the browser and inlined at build time. The Geoapify API key is intentionally public for browser autocomplete and static maps; restrict its allowed referrers and APIs. Never add `NEXT_PUBLIC_` to a secret key — `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `QR_TOKEN_SECRET`, `UPSTASH_REDIS_REST_TOKEN`, `CRON_SECRET`, `POSTHOG_PROJECT_API_KEY`, and `POSTHOG_PERSONAL_API_KEY` must never carry that prefix.
 
 ---
 

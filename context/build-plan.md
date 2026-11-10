@@ -12,8 +12,8 @@ Build the complete public landing + Discover UI with mock event data.
 
 **UI:**
 - Navbar — logo, Discover, My Tickets, Create Event, Login/Signup
-- Discover page (mobile): welcoming heading, city picker, search field, and horizontal scrollable category chips directly beneath it
-- Discover page (desktop): welcoming heading, search bar + separate location dropdown, and the same horizontal category chips
+- Discover page (mobile): welcoming heading, event and Nigerian location search fields, and horizontal scrollable category chips directly beneath them
+- Discover page (desktop): welcoming heading, event search and Geoapify Nigerian location autocomplete, and the same horizontal category chips
 - Event cards show: cover image, title, date/venue, starting price, and one status badge — **"Free"** (price = 0), a relative countdown (**"In 4 days"**, **"In 2 weeks"**, **"In 1 month"**), or **"Live"** (pulsing red dot) when the event is currently happening
 - Empty state (no events matching filters) and search-results state
 - Footer
@@ -72,7 +72,7 @@ Wire the category sidebar/chips and location+search bar to a real `categories` l
 
 **Logic:**
 - Category chip selection filters the mock dataset client-side
-- Location field opens a lightweight city picker (manual entry for MVP; GPS detection can come later)
+- Location field offers Geoapify suggestions restricted to Nigeria; free-text location matching is also supported
 
 ### 06 Discover Page — Real Data
 Wire Discover to real Supabase data via React Query.
@@ -89,6 +89,7 @@ Build the complete event detail page with mock data.
 
 **UI:**
 - Hero image, title, date/time, venue (or "Online" label for virtual events), category
+- In-person venue map with attribution and a Google Maps directions action beneath it
 - Ticket tier list with price and remaining quantity
 - "Get tickets" CTA
 - Sold-out state per tier (and a "Notify me if resold" fallback is **not** included — resale is out of scope; use a simple "Notify me" waitlist placeholder or omit for MVP)
@@ -166,7 +167,7 @@ Build the 5-step wizard UI with mock/local state, skippable and resumable.
 **UI:**
 - Step 1 — Organizer profile (name, logo, bio)
 - Step 2 — Payout setup (bank name and account number sent directly to Paystack; no BVN, no stored bank details)
-- Step 3 — Create first event (title, in-person/online toggle, venue or format, date/time **and end date/time**, category, description, image)
+- Step 3 — Create first event (title, in-person/online toggle, verified Nigerian venue suggestion with coordinates or online platform, date/time **and end date/time**, category, description, image)
 - Step 4 — Ticket tiers (name, price, quantity, per-tier preset/custom color, image, card shape, finish, and black/white text)
 - Step 5 — Review & publish (live preview of the public event card and the attendee ticket card)
 
@@ -268,6 +269,30 @@ Build the locked/unlocked join-link states with mock countdown data.
 - Return a URL only through an authenticated RPC after verifying the signed-in user owns an issued ticket linked to a paid order for the published online event
 - Keep the URL null in the RPC response until database time reaches `starts_at - 30 minutes`; the attendee countdown is derived from the returned database timestamps
 - Link the ticket-specific join route from issued online tickets in My Tickets; do not reveal URLs for invalid tickets, locked access, or missing links
+
+---
+
+## Phase 7 — Nigerian Location Search & Event Maps
+
+### 25 Location Search, Verified Venues & Maps
+
+**Logic and UI:**
+- Replace the fixed city list with all-Nigeria discovery; attendees can search using Geoapify suggestions or free text, matching event venue/city text without proximity filtering
+- Require organizers to choose a Geoapify suggestion restricted to Nigeria for in-person venues; store the formatted address, city/state, latitude, and longitude
+- Preserve online platform and private join-link behavior without physical coordinates
+- Render an attributed Geoapify static venue map on in-person event details and put a Google Maps directions button directly beneath it
+- Keep the Geoapify key browser-visible but restricted by referrer and API in provider settings; document its build-time environment configuration
+- Verify existing location selection, persistence, search filtering, event map, directions link, and no-key states
+
+## Phase 8 — Event Category Taxonomy
+
+### 26 Expanded Event Categories
+
+**Logic and UI:**
+- Replace the five legacy event categories with the shared 12-category list in `lib/constants.ts`
+- Use the same ordered list in organizer event creation, Discover filters, and category presentation
+- Map existing event values to the closest new category and update the database publishing validator in a forward migration
+- Preserve prior migration history and keep the schema baseline synchronized
 
 ---
 

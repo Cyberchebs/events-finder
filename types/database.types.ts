@@ -56,6 +56,8 @@ export type Database = {
           city: string | null;
           format: "in_person" | "online";
           venue_address: string | null;
+          venue_latitude: number | null;
+          venue_longitude: number | null;
           starts_at: string;
           ends_at: string;
           status: "draft" | "published";
@@ -73,6 +75,8 @@ export type Database = {
           city?: string | null;
           format: "in_person" | "online";
           venue_address?: string | null;
+          venue_latitude?: number | null;
+          venue_longitude?: number | null;
           starts_at: string;
           ends_at: string;
           status?: "draft" | "published";
@@ -90,6 +94,8 @@ export type Database = {
           city?: string | null;
           format?: "in_person" | "online";
           venue_address?: string | null;
+          venue_latitude?: number | null;
+          venue_longitude?: number | null;
           starts_at?: string;
           ends_at?: string;
           status?: "draft" | "published";

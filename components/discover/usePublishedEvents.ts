@@ -34,6 +34,8 @@ function isPublicEvent(value: unknown): value is PublicEvent {
     (typeof value.city === "string" || value.city === null) &&
     (value.format === "in_person" || value.format === "online") &&
     (typeof value.venue_address === "string" || value.venue_address === null) &&
+    (typeof value.venue_latitude === "number" || value.venue_latitude === null) &&
+    (typeof value.venue_longitude === "number" || value.venue_longitude === null) &&
     typeof value.starts_at === "string" &&
     typeof value.ends_at === "string" &&
     typeof value.organizer_id === "string" &&

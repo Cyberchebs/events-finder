@@ -22,6 +22,8 @@ cp .env.example .env.local   # fill in Supabase, Paystack, PostHog, and QR secre
 npm run dev
 ```
 
+Set `NEXT_PUBLIC_GEOAPIFY_API_KEY` in `.env.local` for Nigerian venue suggestions and event maps. This key is exposed in the browser by design, so restrict its allowed website referrers and APIs in your Geoapify project. Set it before building because Next.js inlines `NEXT_PUBLIC_` values into the client bundle.
+
 Generate Supabase types after any schema change:
 
 ```bash

@@ -313,8 +313,10 @@ takes effect on the usher's very next scan attempt, not next page load
 | description                | text          |                                              |
 | image_url                    | text          |                                              |
 | category                       | text          |                                              |
+| city                           | text          | Geoapify-derived locality and state for in-person events |
 | format                           | text          | `in_person` \| `online`                        |
 | venue_address                      | text          | Physical address or online platform label; never the attendee join URL |
+| venue_latitude / venue_longitude | double precision | Verified Geoapify coordinates for in-person events; online events have null coordinates |
 | starts_at                              | timestamptz   | UTC — required                                    |
 | ends_at                                  | timestamptz   | UTC — required, drives "Live" status                |
 | status                                    | text          | `draft` \| `published`                              |
@@ -330,6 +332,10 @@ takes effect on the usher's very next scan attempt, not next page load
 | updated_at   | timestamptz |                                                        |
 
 The private schema has no client grants or direct-read policies. Organizer draft writes, draft prefill, and attendee access use authenticated RPCs. The attendee RPC verifies an issued ticket and paid order, then returns the URL only at or after `starts_at - 30 minutes`.
+
+### Nigerian Location Search & Venue Maps
+
+Geoapify autocomplete is restricted to Nigeria. Organizers must choose a suggestion for an in-person event; the formatted venue, city/state, and coordinates are validated in the Server Action and stored on `events`. Discover starts with all Nigerian events and matches a selected suggestion or free-text location against venue/city text without a distance radius. Event details use Geoapify Static Maps with attribution and provide a Google Maps directions URL. `NEXT_PUBLIC_GEOAPIFY_API_KEY` is a browser-visible key, not a secret; restrict its allowed referrers and API access in Geoapify.
 
 ### `ticket_types`
 
