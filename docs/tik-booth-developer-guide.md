@@ -372,7 +372,8 @@ Names below describe configuration only. Their secret values must never be copie
 | `QR_TOKEN_SECRET` | Sign/verify ticket QR tokens | Server only |
 | `UPSTASH_REDIS_REST_URL` | Rate-limit Redis endpoint | Server configuration |
 | `UPSTASH_REDIS_REST_TOKEN` | Rate-limit Redis authentication | Server only |
-| `CRON_SECRET` | Authenticate the reservation-expiry job | Server only |
+| `CRON_SECRET` | Authenticate the reservation-expiry job; also configure as a GitHub Actions repository secret | Server only |
+| `CRON_JOB_URL` | GitHub Actions repository secret containing the production `/api/jobs/expire-reservations` URL | GitHub Actions only |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | Browser/server PostHog project key | Public project token |
 | `NEXT_PUBLIC_POSTHOG_HOST` | PostHog ingestion host | Browser and server |
 | `POSTHOG_PROJECT_API_KEY` | Server-side event capture integration | Server only |

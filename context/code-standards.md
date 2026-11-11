@@ -261,7 +261,7 @@ All environment variables defined in `.env.local` for development. Never hardcod
 | `QR_TOKEN_SECRET` | `lib/qr.ts` (server only — signs/verifies QR tokens) |
 | `UPSTASH_REDIS_REST_URL` | `lib/rate-limit.ts` |
 | `UPSTASH_REDIS_REST_TOKEN` | `lib/rate-limit.ts` (server only; checkout and check-in fail closed if missing) |
-| `CRON_SECRET` | Vercel Cron reservation-expiry route (server only) |
+| `CRON_SECRET` | Reservation-expiry route and GitHub Actions repository secret (server only) |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | `instrumentation-client.ts`, `instrumentation.ts` |
 | `NEXT_PUBLIC_POSTHOG_HOST` | `instrumentation-client.ts`, `instrumentation.ts` |
 | `NEXT_PUBLIC_GEOAPIFY_API_KEY` | `components/location/LocationAutocomplete.tsx`, `components/events/VenueMap.tsx`; public browser key, restrict by referrer and API in Geoapify |

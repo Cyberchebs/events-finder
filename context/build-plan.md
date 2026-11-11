@@ -129,7 +129,7 @@ This is the correctness-critical phase — implements the mechanism that prevent
 - `checkout_started` PostHog event fired client-side (`event_id`, `ticket_type_id`, `quantity`)
 - Client redirected to Paystack's `initializeTransaction` (via the `PaymentProvider` abstraction), passing `reference` = reservation ID
 - `checkout_payment_initiated` PostHog event fired on redirect
-- Vercel Cron invokes `GET /api/jobs/expire-reservations` every minute with `CRON_SECRET`; the protected worker verifies expired reservations with Paystack before releasing inventory
+- A GitHub Actions schedule invokes `GET /api/jobs/expire-reservations` every five minutes with `CRON_SECRET`; the protected worker verifies expired reservations with Paystack before releasing inventory. Keep scheduling outside Vercel Cron so deployments do not require Vercel Pro for per-minute schedules.
 - The expiry worker verifies the Paystack transaction first; it releases stock only after Paystack reports a terminal non-success, so a delayed success webhook cannot race released inventory
 
 ### 11 Payment Webhook + Ticket Issuance

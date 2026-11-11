@@ -1,0 +1,35 @@
+name: Expire reservations
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: expire-reservations
+  cancel-in-progress: false
+
+jobs:
+  expire-reservations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call reservation expiry endpoint
+        env:
+          CRON_JOB_URL: ${{ secrets.CRON_JOB_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          : "${CRON_JOB_URL:?Set the CRON_JOB_URL repository secret}"
+          : "${CRON_SECRET:?Set the CRON_SECRET repository secret}"
+          curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --retry 2 \
+            --retry-all-errors \
+            --retry-delay 2 \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_JOB_URL}"

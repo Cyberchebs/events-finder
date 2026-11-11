@@ -20,6 +20,8 @@ Update this file after every completed feature. Any AI agent reading this should
 
 **Phase 8 validation:** Focused ESLint, TypeScript, production build, exact category count/order, and whitespace checks passed. Remote verification confirmed all 12 categories are accepted by `publish_onboarding_event`, existing event categories were remapped, and the coordinate constraint remains installed.
 
+**Reservation expiry scheduling:** Removed the Vercel Cron schedule and added a GitHub Actions workflow that calls the protected reservation-expiry endpoint every five minutes, with manual dispatch and serialized runs. Configure repository Actions secrets `CRON_JOB_URL` and `CRON_SECRET` before enabling scheduled cleanup in deployment. The GitHub workflow itself has not been run from GitHub yet.
+
 **Recent fix:** Completed organizers can create additional events without being redirected to the latest published event. New-event actions create a distinct draft; draft continuation carries its event ID through the wizard.
 
 **Recent design alignment:** Responsive navigation, Discover, login, organizer setup, ticket wallet (including the empty state), check-in landing/scanning, and the `/profile` route were aligned to the current screens in `context/tik-booth-designs`. The profile page now includes real ticket, organizer-dashboard/onboarding, and sign-out actions; unsupported profile-edit, interests, privacy, and notification controls were not fabricated. Pages without a direct screen retain their behavior and use the shared design tokens and related page patterns.
